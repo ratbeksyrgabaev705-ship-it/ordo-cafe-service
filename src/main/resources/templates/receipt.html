@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title th:text="${'Заказ — ' + restaurantName}">Заказ маалыматтары — ОРДО КАФЕ</title>
+    <title th:text="${'Заказ — ' + restaurantName}">Заказ маалыматтары — Базар-Коргон</title>
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="stylesheet" th:href="${customerCss}" href="/ordo-customer.css">
+    <link rel="stylesheet" th:href="${customerCss}" href="/bazar-korgon-customer.css">
     <script th:inline="javascript">
         window.RESTAURANT = {
             id: /*[[${restaurantId}]]*/ 1,
-            slug: /*[[${restaurantSlug}]]*/ 'ordo',
-            name: /*[[${restaurantName}]]*/ 'ОРДО КАФЕ',
-            base: /*[[${restaurantBase}]]*/ '/r/ordo'
+            slug: /*[[${restaurantSlug}]]*/ 'bazar-korgon',
+            name: /*[[${restaurantName}]]*/ 'Базар-Коргон',
+            base: /*[[${restaurantBase}]]*/ '/bazar-korgon'
         };
     </script>
     <script src="/restaurant-context.js"></script>
@@ -703,7 +703,7 @@
         <div class="top-row">
             <button type="button" class="back-button" onclick="window.location.href='/cart'">←</button>
             <div class="logo-center">
-                <img src="/logo.png" alt="ОРДО КАФЕ">
+                <img src="/logo.png" alt="Базар-Коргон">
             </div>
             <div style="width:45px;"></div>
         </div>
@@ -724,7 +724,7 @@
 
         <div class="header-main">
             <div class="header-logo">
-                <img src="/logo.png" alt="ОРДО КАФЕ">
+                <img src="/logo.png" alt="Базар-Коргон">
             </div>
             <div>
             <div class="header-title">Заказ маалыматтары</div>

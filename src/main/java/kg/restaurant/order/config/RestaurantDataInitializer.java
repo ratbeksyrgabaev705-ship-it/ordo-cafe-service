@@ -55,10 +55,11 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         ensureBazarKorgonRestaurant();
         ensureAgaIniRestaurant();
         deactivateCompetitorPlaceholders();
+        purgeOrdoBranding();
         syncCustomerUrls();
         backfillRestaurantIds();
         seedFamilyMenuIfEmpty();
-        seedOrdoMenuIfEmpty();
+        seedBazarKorgonMenuIfEmpty();
         seedAgaIniMenuIfEmpty();
         ensureFamilyPizzas();
         syncFamilyMenuImages();
@@ -137,7 +138,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         restaurantRepository.save(family);
     }
 
-    /** Базар-Коргон — негизги ресторан (мурунку Ordo) */
+    /** Базар-Коргон — негизги ресторан */
     private void ensureBazarKorgonRestaurant() {
         Restaurant bk = restaurantRepository.findBySlug("bazar-korgon").orElse(null);
         Restaurant oldOrdo = restaurantRepository.findBySlug("ordo").orElse(null);
@@ -174,6 +175,23 @@ public class RestaurantDataInitializer implements CommandLineRunner {
             oldOrdo.setActive(false);
             restaurantRepository.save(oldOrdo);
             log.info("Deactivated duplicate ordo restaurant record");
+        }
+    }
+
+    /** DB'ден Ordo аталышын тазалоо */
+    private void purgeOrdoBranding() {
+        for (Restaurant r : restaurantRepository.findAll()) {
+            String name = r.getName() != null ? r.getName() : "";
+            String upper = name.toUpperCase(java.util.Locale.ROOT);
+            if (upper.contains("ORDO") || name.contains("ОРДО") || upper.contains("ОРДО")) {
+                if ("bazar-korgon".equals(r.getSlug())) {
+                    r.setName("Базар-Коргон");
+                    r.setTagline("Лагман, плов, самса — Базар-Коргон");
+                    r.setCustomerUrl("/bazar-korgon");
+                    restaurantRepository.save(r);
+                    log.info("Purged Ordo branding from restaurant id={}", r.getId());
+                }
+            }
         }
     }
 
@@ -242,37 +260,37 @@ public class RestaurantDataInitializer implements CommandLineRunner {
 
         Long rid = aga.getId();
         List<MenuItem> menu = List.of(
-                ordoItem(rid, "Плов", "Плов", "Плов", "Плов",
+                bkMenuItem(rid, "Плов", "Плов", "Плов", "Плов",
                         "Классикалык плов — күрүч, эт, сабиз", "Классический плов", 380.0,
                         "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&q=80"),
-                ordoItem(rid, "Лагман", "Лагман", "Лагман", "Лагман",
+                bkMenuItem(rid, "Лагман", "Лагман", "Лагман", "Лагман",
                         "Уйгур лагманы", "Лагман с говядиной", 320.0,
                         "https://images.unsplash.com/photo-1617093727343-374698b8141?w=400&q=80"),
-                ordoItem(rid, "Ганфан", "Ганфан", "Лагман", "Лагман",
+                bkMenuItem(rid, "Ганфан", "Ганфан", "Лагман", "Лагман",
                         "Кесме + күрүч", "Лапша с рисом", 340.0,
                         "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80"),
-                ordoItem(rid, "Шорпа", "Шорпа", "Шорпо", "Шорпо",
+                bkMenuItem(rid, "Шорпа", "Шорпа", "Шорпо", "Шорпо",
                         "Эt suusu", "Мясной бульон", 300.0,
                         "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&q=80"),
-                ordoItem(rid, "Манты", "Манты", "Улуттук тамактар", "Национальные блюда",
+                bkMenuItem(rid, "Манты", "Манты", "Улуттук тамактар", "Национальные блюда",
                         "Буу манты", "Манты на пару", 400.0,
                         "https://images.unsplash.com/photo-1563245372-28a3042f9a9d?w=400&q=80"),
-                ordoItem(rid, "Куурдак", "Куурдак", "Улуттук тамактар", "Национальные блюда",
+                bkMenuItem(rid, "Куурдак", "Куурдак", "Улуттук тамактар", "Национальные блюда",
                         "Куурулган эт", "Жареное мясо", 450.0,
                         "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=80"),
-                ordoItem(rid, "Беш бармак", "Беш бармак", "Улуттук тамактар", "Национальные блюда",
+                bkMenuItem(rid, "Беш бармак", "Беш бармак", "Улуттук тамактар", "Национальные блюда",
                         "Классикалык бesh бармak", "Классический беш бармак", 520.0,
                         "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400&q=80"),
-                ordoItem(rid, "Эtти самса", "Самса с мясом", "Самса", "Самса",
+                bkMenuItem(rid, "Эtти самса", "Самса с мясом", "Самса", "Самса",
                         "Тандыр самса", "Самса с мясом", 90.0,
                         "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80"),
-                ordoItem(rid, "Салат", "Свежий салат", "Салат", "Салаты",
+                bkMenuItem(rid, "Салат", "Свежий салат", "Салат", "Салаты",
                         "Жашыл салат", "Свежий салат", 140.0,
                         "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80"),
-                ordoItem(rid, "Жашыл чай", "Зелёный чай", "Ичимдиктер", "Напитки",
+                bkMenuItem(rid, "Жашыл чай", "Зелёный чай", "Ичимдиктер", "Напитки",
                         "Ысыk чай", "Зелёный чай", 60.0,
                         "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80"),
-                ordoItem(rid, "Айран", "Айран", "Ичимдиктер", "Напитки",
+                bkMenuItem(rid, "Айран", "Айран", "Ичимдиктер", "Напитки",
                         "Сveжo айран", "Свежий айран", 80.0,
                         "https://images.unsplash.com/photo-1623065424889-aaaf9e2b7c4d?w=400&q=80")
         );
@@ -280,7 +298,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         log.info("Seeded {} menu items for Aga-Ini (id={})", menu.size(), rid);
     }
 
-    private void seedOrdoMenuIfEmpty() {
+    private void seedBazarKorgonMenuIfEmpty() {
         Restaurant bk = restaurantRepository.findBySlug("bazar-korgon")
                 .or(() -> restaurantRepository.findBySlug("ordo"))
                 .orElse(null);
@@ -295,55 +313,55 @@ public class RestaurantDataInitializer implements CommandLineRunner {
 
         Long rid = bk.getId();
         List<MenuItem> menu = List.of(
-                ordoItem(rid, "Уйгур лагман 0,7", "Уйгурский лагман 0,7", "Лагман", "Лагман",
+                bkMenuItem(rid, "Уйгур лагман 0,7", "Уйгурский лагман 0,7", "Лагман", "Лагман",
                         "Колго чоюлган кесме, уй эти, жашылчалар", "Домашняя лапша с говядиной", 280.0,
                         "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80"),
-                ordoItem(rid, "Уйгур лагман 1,0", "Уйгурский лагман 1,0", "Лагман", "Лагман",
+                bkMenuItem(rid, "Уйгур лагман 1,0", "Уйгурский лагман 1,0", "Лагман", "Лагман",
                         "Чоң порция уйгур лагманы", "Большая порция уйгурского лагмана", 350.0,
                         "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80"),
-                ordoItem(rid, "Лагман", "Лагман", "Лагман", "Лагман",
+                bkMenuItem(rid, "Лагман", "Лагман", "Лагман", "Лагман",
                         "Кесме, уй эти, жашылчалар", "Лапша с говядиной", 300.0,
                         "https://images.unsplash.com/photo-1617093727343-374698b8141?w=400&q=80"),
-                ordoItem(rid, "Ганфан", "Ганфан", "Лагман", "Лагман",
+                bkMenuItem(rid, "Ганфан", "Ганфан", "Лагман", "Лагман",
                         "Кесме, күрүч, уй эти", "Лапша с рисом", 320.0,
                         "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80"),
-                ordoItem(rid, "Плов", "Плов", "Плов", "Плов",
+                bkMenuItem(rid, "Плов", "Плов", "Плов", "Плов",
                         "Күрүч, уй эти, сабиз, пияз", "Рис, говядина, морковь", 350.0,
                         "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&q=80"),
-                ordoItem(rid, "Этти самса", "Самса с мясом", "Самса", "Самса",
+                bkMenuItem(rid, "Этти самса", "Самса с мясом", "Самса", "Самса",
                         "Тандырда бышырылган этти самса", "Самса с мясом", 80.0,
                         "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80"),
-                ordoItem(rid, "Кашкын самса", "Самса с тыквой", "Самса", "Самса",
+                bkMenuItem(rid, "Кашкын самса", "Самса с тыквой", "Самса", "Самса",
                         "Кашкын самса", "Самса с тыквой", 70.0,
                         "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80"),
-                ordoItem(rid, "Шорпа", "Шорпа", "Шорпо", "Шорпо",
+                bkMenuItem(rid, "Шорпа", "Шорпа", "Шорпо", "Шорпо",
                         "Уй эти, картошка, жашылчалар", "Говядина, картофель", 280.0,
                         "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&q=80"),
-                ordoItem(rid, "Манты", "Манты", "Улуттук тамактар", "Национальные блюда",
+                bkMenuItem(rid, "Манты", "Манты", "Улуттук тамактар", "Национальные блюда",
                         "Бууга бышырылган манты", "Манты на пару", 380.0,
                         "https://images.unsplash.com/photo-1563245372-28a3042f9a9d?w=400&q=80"),
-                ordoItem(rid, "Куурдак", "Куурдак", "Улуттук тамактар", "Национальные блюда",
+                bkMenuItem(rid, "Куурдак", "Куурдак", "Улуттук тамактар", "Национальные блюда",
                         "Эт, пияз, сарымсак", "Жареное мясо", 420.0,
                         "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=80"),
-                ordoItem(rid, "Свежий салат", "Свежий салат", "Салат", "Салаты",
+                bkMenuItem(rid, "Свежий салат", "Свежий салат", "Салат", "Салаты",
                         "Жашылчалар", "Свежие овощи", 150.0,
                         "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80"),
-                ordoItem(rid, "Тандыр нан", "Тандыр-лепёшка", "Нан", "Хлеб",
+                bkMenuItem(rid, "Тандыр нан", "Тандыр-лепёшка", "Нан", "Хлеб",
                         "Жаңы тандыр нан", "Свежая лепёшка", 50.0,
                         "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80"),
-                ordoItem(rid, "Жашыл чай", "Зелёный чай", "Ичимдиктер", "Напитки",
+                bkMenuItem(rid, "Жашыл чай", "Зелёный чай", "Ичимдиктер", "Напитки",
                         "Ысыk жашыл чай", "Зелёный чай", 50.0,
                         "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80"),
-                ordoItem(rid, "Айран", "Айран", "Ичимдиктер", "Напитки",
+                bkMenuItem(rid, "Айран", "Айран", "Ичимдиктер", "Напитки",
                         "Сveжo айран", "Свежий айран", 80.0,
                         "https://images.unsplash.com/photo-1623065424889-aaaf9e2b7c4d?w=400&q=80")
         );
 
         menuItemRepository.saveAll(menu);
-        log.info("Seeded {} menu items for БАЗАР-КОРГОН (id={})", menu.size(), rid);
+        log.info("Seeded {} menu items for Базар-Коргон (id={})", menu.size(), rid);
     }
 
-    private MenuItem ordoItem(
+    private MenuItem bkMenuItem(
             Long restaurantId,
             String nameKg,
             String nameRu,

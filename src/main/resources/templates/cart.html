@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${'Себет — ' + restaurantName}">Себет — ОРДО КАФЕ</title>
+    <title th:text="${'Себет — ' + restaurantName}">Себет — Базар-Коргон</title>
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="stylesheet" th:href="${customerCss}" href="/ordo-customer.css">
+    <link rel="stylesheet" th:href="${customerCss}" href="/bazar-korgon-customer.css">
     <script th:inline="javascript">
         window.RESTAURANT = {
             id: /*[[${restaurantId}]]*/ 1,
-            slug: /*[[${restaurantSlug}]]*/ 'ordo',
-            name: /*[[${restaurantName}]]*/ 'ОРДО КАФЕ',
-            base: /*[[${restaurantBase}]]*/ '/r/ordo'
+            slug: /*[[${restaurantSlug}]]*/ 'bazar-korgon',
+            name: /*[[${restaurantName}]]*/ 'Базар-Коргон',
+            base: /*[[${restaurantBase}]]*/ '/bazar-korgon'
         };
     </script>
     <script src="/restaurant-context.js"></script>
@@ -296,11 +296,11 @@
 </div>
 
 <nav class="bottom-nav">
-    <a th:href="${restaurantBase}" href="/r/ordo" class="nav-item">
+    <a th:href="${restaurantBase}" href="/bazar-korgon" class="nav-item">
         <span class="nav-icon-wrap">🍴</span>
         <span id="navMenu">Меню</span>
     </a>
-    <a th:href="${restaurantBase + '/cart'}" href="/r/ordo/cart" class="nav-item active">
+    <a th:href="${restaurantBase + '/cart'}" href="/bazar-korgon/cart" class="nav-item active">
         <span class="nav-icon-wrap">
             🛒
             <span id="navBadge" class="nav-badge">0</span>
@@ -354,7 +354,7 @@
 
     function applyLanguage() {
         document.documentElement.lang = currentLanguage === "ru" ? "ru" : "ky";
-        document.title = (currentLanguage === "ru" ? "Корзина" : "Себет") + " — ОРДО КАФЕ";
+        document.title = (currentLanguage === "ru" ? "Корзина" : "Себет") + " — Базар-Коргон";
         document.getElementById("headerTitle").textContent = t("cart");
         document.getElementById("emptyTitle").textContent = t("emptyCart");
         document.getElementById("emptyText").textContent = t("emptyText");

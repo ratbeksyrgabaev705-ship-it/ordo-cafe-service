@@ -3,15 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${restaurantName}">ОРДО КАФЕ</title>
+    <title th:text="${restaurantName}">Базар-Коргон</title>
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="stylesheet" th:href="${customerCss}" href="/ordo-customer.css">
+    <link rel="stylesheet" th:href="${customerCss}" href="/bazar-korgon-customer.css">
     <script th:inline="javascript">
         window.RESTAURANT = {
             id: /*[[${restaurantId}]]*/ 1,
-            slug: /*[[${restaurantSlug}]]*/ 'ordo',
-            name: /*[[${restaurantName}]]*/ 'ОРДО КАФЕ',
-            base: /*[[${restaurantBase}]]*/ '/r/ordo'
+            slug: /*[[${restaurantSlug}]]*/ 'bazar-korgon',
+            name: /*[[${restaurantName}]]*/ 'Базар-Коргон',
+            base: /*[[${restaurantBase}]]*/ '/bazar-korgon'
         };
     </script>
     <script src="/restaurant-context.js"></script>
@@ -375,7 +375,7 @@
             <button type="button" class="item-lang-pill" id="langToggle">Кыргызча / Русский</button>
         </div>
         <div class="item-hero-logo">
-            <img src="/logo.png" alt="ОРДО КАФЕ">
+            <img src="/logo.png" alt="Базар-Коргон">
         </div>
     </header>
 
@@ -697,7 +697,7 @@
         document.documentElement.lang = lang === 'ru' ? 'ru' : 'ky';
         applyLanguageUi();
         if (item) {
-            document.title = getName(item) + ' — ОРДО КАФЕ';
+            document.title = getName(item) + ' — Базар-Коргон';
             render();
         }
     };
@@ -723,7 +723,7 @@
                     return;
                 }
 
-                document.title = getName(item) + ' — ОРДО КАФЕ';
+                document.title = getName(item) + ' — Базар-Коргон';
                 render();
             })
             .catch(() => {

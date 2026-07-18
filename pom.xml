@@ -15,8 +15,8 @@
     <groupId>kg.restaurant</groupId>
     <artifactId>ordo-cafe-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>ordo-cafe-service</name>
-    <description>Ordo Cafe — заказ кабыл алуу сервиси</description>
+    <name>bazar-korgon-service</name>
+    <description>Базар-Коргон — тамак жеткирүү сервиси</description>
 
     <properties>
         <java.version>21</java.version>

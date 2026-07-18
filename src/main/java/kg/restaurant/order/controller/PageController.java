@@ -172,6 +172,11 @@ public class PageController {
         return "redirect:/bazar-korgon/receipt";
     }
 
+    @GetMapping("/ordo-customer.css")
+    public String legacyOrdoCss() {
+        return "redirect:/bazar-korgon-customer.css";
+    }
+
     @GetMapping("/r/ordo")
     public String legacyOrdoMenu() {
         return "redirect:/bazar-korgon";

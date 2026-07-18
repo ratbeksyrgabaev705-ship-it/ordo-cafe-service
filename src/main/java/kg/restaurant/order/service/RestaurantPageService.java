@@ -92,14 +92,14 @@ public class RestaurantPageService {
         if ("aga-ini".equals(s)) {
             return "aga-ini";
         }
-        return "ordo";
+        return "bazar-korgon";
     }
 
     public String resolveCustomerCss(String slug) {
         return switch (normalizeSlug(slug)) {
             case "family" -> "/family-customer.css";
             case "aga-ini" -> "/aga-ini-customer.css";
-            default -> "/ordo-customer.css";
+            default -> "/bazar-korgon-customer.css";
         };
     }
 
