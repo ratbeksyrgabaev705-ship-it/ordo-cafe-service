@@ -1,4 +1,4 @@
-﻿package kg.restaurant.order.config;
+package kg.restaurant.order.config;
 
 import kg.restaurant.order.model.Courier;
 import kg.restaurant.order.model.CustomerOrder;
