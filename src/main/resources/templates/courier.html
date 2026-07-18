@@ -179,35 +179,46 @@
         if (/бишкек|bishkek/i.test(a)) return a;
         return a + ', Бишкек';
     }
-    function build2gisUrl(address) {
-        const q = encodeURIComponent(normalizeAddress(address));
-        return 'https://2gis.kg/bishkek/directions/tab/car/to/' + q;
-    }
     function build2gisSearchUrl(address) {
         const q = encodeURIComponent(normalizeAddress(address));
-        return 'https://2gis.kg/bishkek/search/' + q;
+        return 'https://2gis.ru/bishkek/search/' + q;
     }
-    window.open2gis = function (address, event) {
-        if (!address) return false;
-        const url = build2gisUrl(address);
-        if (event && event.currentTarget && event.currentTarget.href) {
-            return true;
+    function build2gisAndroidIntent(address) {
+        const norm = normalizeAddress(address);
+        const path = '2gis.ru/bishkek/search/' + encodeURIComponent(norm);
+        const fallback = encodeURIComponent(build2gisSearchUrl(address));
+        return 'intent://' + path + '#Intent;scheme=https;package=ru.dublgis.dgismobile;S.browser_fallback_url=' + fallback + ';end';
+    }
+    window.open2gisAddress = function (address) {
+        if (!address) return;
+        const httpsUrl = build2gisSearchUrl(address);
+        const isAndroid = /Android/i.test(navigator.userAgent);
+        if (isAndroid) {
+            window.location.href = build2gisAndroidIntent(address);
+            return;
         }
-        window.location.href = url;
-        return false;
+        window.location.href = httpsUrl;
+    };
+    window.copyAddress = function (address) {
+        if (!address) return;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(normalizeAddress(address)).then(function () {
+                alert('Дарек көчүрүлдү — 2GIS\'ке коюп изде');
+            });
+        } else {
+            prompt('Даректи көчүр:', normalizeAddress(address));
+        }
     };
 
     function addressButton(o) {
         const addr = o.address || '';
         if (!addr) return '<div class="c-order-meta">📍 Дарек жок</div>';
-        const routeUrl = build2gisUrl(addr);
-        const searchUrl = build2gisSearchUrl(addr);
-        return `<a class="c-address" href="${routeUrl}" target="_blank" rel="noopener noreferrer">
-            <span class="c-address-label">📍 Дарек — 2GIS маршрут</span>
+        return `<button type="button" class="c-address" onclick="open2gisAddress(${JSON.stringify(addr)})">
+            <span class="c-address-label">📍 Дарек — 2GIS ачуу</span>
             <span class="c-address-text">${esc(addr)}</span>
-            <span class="c-address-hint">🗺 Бас — 2GIS ачылат (тиркеме же браузер)</span>
-        </a>
-        <a class="c-call" href="${searchUrl}" target="_blank" rel="noopener noreferrer" style="background:#334155;margin-bottom:8px">🔍 2GIS'те издөө</a>`;
+            <span class="c-address-hint">🗺 Бас — 2GIS тиркемesi ачылат</span>
+        </button>
+        <button type="button" class="c-call" style="background:#334155;margin-bottom:8px;border:none;width:100%;cursor:pointer;font-family:inherit" onclick="copyAddress(${JSON.stringify(addr)})">📋 Даректи көчүр</button>`;
     }
 
     function offerCard(o) {
