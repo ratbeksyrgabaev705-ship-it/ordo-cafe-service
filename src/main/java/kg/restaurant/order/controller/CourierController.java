@@ -2,6 +2,7 @@ package kg.restaurant.order.controller;
 
 import kg.restaurant.order.model.Courier;
 import kg.restaurant.order.repository.CourierRepository;
+import kg.restaurant.order.service.CourierActivityService;
 import kg.restaurant.order.service.TelegramService;
 import kg.restaurant.order.util.PhoneUtils;
 import org.springframework.http.ResponseEntity;
@@ -16,13 +17,16 @@ import java.util.Map;
 public class CourierController {
 
     private final CourierRepository courierRepository;
+    private final CourierActivityService courierActivityService;
     private final TelegramService telegramService;
 
     public CourierController(
             CourierRepository courierRepository,
+            CourierActivityService courierActivityService,
             TelegramService telegramService
     ) {
         this.courierRepository = courierRepository;
+        this.courierActivityService = courierActivityService;
         this.telegramService = telegramService;
     }
 
@@ -39,6 +43,12 @@ public class CourierController {
     @GetMapping("/pending")
     public List<Courier> getPending() {
         return courierRepository.findByActiveFalseOrderByCreatedAtDesc();
+    }
+
+    /** Ratlion: курьерлердин учурдагы кыймылы жана окуялар */
+    @GetMapping("/activity")
+    public Map<String, Object> activity() {
+        return courierActivityService.getDashboard();
     }
 
     @GetMapping("/by-phone")

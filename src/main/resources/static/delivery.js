@@ -4,6 +4,7 @@
     let newOrders = [];
     let currentOrder = null;
     let operatorName = localStorage.getItem('ratlionOperator') || 'Оператор';
+    let courierActivityTimer = null;
 
     const AYLAR = ['Учт', 'Бир', 'Же', 'Чап', 'Беш', 'Кул', 'Тек', 'Баш', 'Аяк', 'Тог', 'Жет', 'Бек'];
 
@@ -145,6 +146,16 @@
         if (section === 'restaurants') renderRestaurants();
         if (section === 'reports') initReports();
         if (section === 'history') { populateHistRest(); loadHistory(); }
+        if (section === 'couriers') {
+            loadCouriers();
+            loadCourierActivity();
+            if (courierActivityTimer) clearInterval(courierActivityTimer);
+            courierActivityTimer = setInterval(loadCourierActivity, 8000);
+        } else if (courierActivityTimer) {
+            clearInterval(courierActivityTimer);
+            courierActivityTimer = null;
+        }
+        if (section === 'settings') { /* noop */ }
     };
 
     function handleHash() {
@@ -379,6 +390,229 @@
         localStorage.setItem('ratlionOperator', operatorName);
         alert('Сакталды');
     };
+
+    function courierLink(phone, name) {
+        return location.origin + '/courier?phone=' + encodeURIComponent(phone)
+            + (name ? '&name=' + encodeURIComponent(name) : '');
+    }
+
+    function courierActivityBadgeClass(status) {
+        const map = {
+            FREE: 'courier-act-free',
+            OFFER: 'courier-act-offer',
+            WAITING: 'courier-act-waiting',
+            PICKUP: 'courier-act-pickup',
+            DELIVERING: 'courier-act-delivering'
+        };
+        return map[status] || 'courier-act-free';
+    }
+
+    function renderCourierSteps(steps) {
+        if (!steps || !steps.length) return '';
+        return `<div class="courier-act-steps">${steps.map((s, i) => {
+            const cls = [s.done ? 'done' : '', s.current ? 'current' : ''].filter(Boolean).join(' ');
+            return `<div class="courier-act-step ${cls}">
+                ${i < steps.length - 1 ? '<span class="courier-act-step-line"></span>' : ''}
+                <div class="courier-act-step-dot"></div>
+                <div class="courier-act-step-label">${esc(s.label)}</div>
+            </div>`;
+        }).join('')}</div>`;
+    }
+
+    function renderCourierActivityCard(c) {
+        const orders = c.activeOrders || [];
+        const history = c.recentHistory || [];
+        const ordersHtml = orders.length
+            ? orders.map(o => `<div class="courier-act-order">
+                <div class="courier-act-order-num">📦 ${esc(o.displayOrderNumber || '#' + o.id)} · ${esc(statusLabel(o.orderStatus))}</div>
+                <div class="courier-act-order-addr">${esc(o.customerName || '')}${o.address ? ' — ' + esc(o.address) : ''}</div>
+                <div class="courier-act-order-times">
+                    ${o.acceptedAt ? `<span>Кабыл: ${fmtTime(o.acceptedAt)}</span>` : ''}
+                    ${o.readyAt ? `<span>Даяр: ${fmtTime(o.readyAt)}</span>` : ''}
+                    ${o.courierAt ? `<span>Алды: ${fmtTime(o.courierAt)}</span>` : ''}
+                </div>
+                ${renderCourierSteps(o.steps)}
+            </div>`).join('')
+            : (c.activityStatus === 'OFFER'
+                ? '<div class="courier-act-order" style="background:#f5f3ff;border-color:#ddd6fe">Жаңы заказ сунушу күтүлүүдө</div>'
+                : '<div style="font-size:13px;color:var(--d-muted);margin-top:6px">Активдүү заказ жок</div>');
+
+        const historyHtml = history.length
+            ? `<details class="courier-act-history">
+                <summary>Тарых (${history.length})</summary>
+                <div class="courier-act-history-list">
+                    ${history.map(h => `<div class="courier-act-history-row">
+                        <strong>${esc(h.displayOrderNumber || '#' + h.orderId)}</strong>
+                        <span>${esc(h.customerName || '')}</span>
+                        <span class="courier-act-history-time">${fmtTime(h.deliveredAt)}</span>
+                    </div>`).join('')}
+                </div>
+            </details>`
+            : '';
+
+        return `<div class="courier-act-card">
+            <div class="courier-act-head">
+                <div>
+                    <div class="courier-act-name">${esc(c.name)}</div>
+                    <div class="courier-act-meta">📞 ${esc(c.phone)} · Бүгүн: ${c.todayDelivered || 0} жеткирүү</div>
+                </div>
+                <span class="courier-act-badge ${courierActivityBadgeClass(c.activityStatus)}">${esc(c.activityLabel)}</span>
+            </div>
+            ${ordersHtml}
+            ${historyHtml}
+        </div>`;
+    }
+
+    function renderAssignmentsTable(assignments) {
+        if (!assignments.length) {
+            return '<div class="delivery-empty" style="margin:0">Учурда эч ким заказ алган жок</div>';
+        }
+        return `<div class="courier-act-table-wrap"><table class="courier-act-table">
+            <thead><tr>
+                <th>Курьер</th><th>Заказ</th><th>Статус</th><th>Кардар</th><th>Кабыл</th><th>Алды</th>
+            </tr></thead>
+            <tbody>${assignments.map(a => `<tr>
+                <td><strong>${esc(a.courierName)}</strong><div class="courier-act-td-sub">${esc(a.courierPhone || '')}</div></td>
+                <td><strong>${esc(a.displayOrderNumber || '#' + a.id)}</strong></td>
+                <td><span class="delivery-badge ${statusBadgeClass(a.orderStatus)}">${esc(statusLabel(a.orderStatus))}</span></td>
+                <td>${esc(a.customerName || '—')}<div class="courier-act-td-sub">${esc(a.address || '')}</div></td>
+                <td>${fmtTime(a.acceptedAt)}</td>
+                <td>${fmtTime(a.courierAt)}</td>
+            </tr>`).join('')}</tbody>
+        </table></div>`;
+    }
+
+    function renderHistoryTable(history) {
+        if (!history.length) {
+            return '<div class="delivery-empty" style="margin:0">Тарых азырынча бош</div>';
+        }
+        return `<div class="courier-act-table-wrap"><table class="courier-act-table">
+            <thead><tr>
+                <th>Курьер</th><th>Заказ</th><th>Кардар</th><th>Дарек</th><th>Сумма</th><th>Берилди</th>
+            </tr></thead>
+            <tbody>${history.map(h => `<tr>
+                <td><strong>${esc(h.courierName)}</strong></td>
+                <td><strong>${esc(h.displayOrderNumber || '#' + h.orderId)}</strong></td>
+                <td>${esc(h.customerName || '—')}</td>
+                <td class="courier-act-addr">${esc(h.address || '—')}</td>
+                <td>${money(h.totalPrice)} с</td>
+                <td>${fmtTime(h.deliveredAt)}</td>
+            </tr>`).join('')}</tbody>
+        </table></div>`;
+    }
+
+    async function loadCourierActivity() {
+        const box = q('dCourierActivity');
+        const updated = q('dCourierActivityUpdated');
+        if (!box) return;
+        try {
+            const data = await fetch('/api/couriers/activity').then(r => r.json());
+            const couriers = data.couriers || [];
+            const feed = data.feed || [];
+            const assignments = data.assignments || [];
+            const history = data.history || [];
+
+            if (!couriers.length) {
+                box.innerHTML = '<div class="delivery-empty">Курьерлер жок — алгач каттаңыз</div>';
+            } else {
+                const cards = `<div class="courier-act-grid">${couriers.map(renderCourierActivityCard).join('')}</div>`;
+                const assignTable = `<div class="courier-act-section">
+                    <div class="courier-act-feed-title">📋 Кайсы курьер — кайсы заказ</div>
+                    ${renderAssignmentsTable(assignments)}
+                </div>`;
+                const histTable = `<div class="courier-act-section">
+                    <div class="courier-act-feed-title">📜 Жеткирүү тарыхы</div>
+                    ${renderHistoryTable(history)}
+                </div>`;
+                const feedHtml = feed.length
+                    ? `<div class="courier-act-feed">
+                        <div class="courier-act-feed-title">Акыркы окуялар</div>
+                        ${feed.slice(0, 12).map(ev => `<div class="courier-act-feed-item">
+                            <span class="courier-act-feed-time">${fmtTime(ev.at)}</span>
+                            <span><strong>${esc(ev.courierName)}</strong> — ${esc(ev.text || ev.type || '')}</span>
+                        </div>`).join('')}
+                    </div>`
+                    : '';
+                box.innerHTML = cards + assignTable + histTable + feedHtml;
+            }
+
+            if (updated) {
+                updated.textContent = data.updatedAt
+                    ? 'Жаңыртылды: ' + fmtTime(data.updatedAt)
+                    : '—';
+            }
+        } catch (e) {
+            if (box.innerHTML.indexOf('courier-act') < 0) {
+                box.innerHTML = '<div class="delivery-empty">Кыймыл жүктөлбөдү</div>';
+            }
+        }
+    }
+
+    async function loadCouriers() {
+        const box = q('dCourierList');
+        if (!box) return;
+        try {
+            const list = await fetch('/api/couriers/active').then(r => r.json());
+            const phoneCouriers = list.filter(c => c.phone);
+            if (!phoneCouriers.length) {
+                box.innerHTML = '<div class="delivery-empty">Азырынча курьер жок — жогоруда кош</div>';
+                return;
+            }
+            box.innerHTML = phoneCouriers.map(c => {
+                const link = courierLink(c.phone, c.name);
+                return `<div class="delivery-panel" style="margin-bottom:10px;padding:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
+                    <div>
+                        <strong style="font-size:16px">${esc(c.name)}</strong>
+                        <div style="font-size:13px;color:var(--d-muted);margin-top:4px">📞 ${esc(c.phone)}</div>
+                        <div style="font-size:11px;color:var(--d-muted);margin-top:6px;word-break:break-all">${esc(link)}</div>
+                    </div>
+                    <div style="display:flex;gap:8px;flex-shrink:0">
+                        <button type="button" class="delivery-btn delivery-btn-primary delivery-btn-sm" onclick='dCopyCourierLink(${JSON.stringify(c.phone)}, ${JSON.stringify(c.name || "")})'>📋 Шилтeme</button>
+                        <a class="delivery-btn delivery-btn-outline delivery-btn-sm" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none;line-height:1.4">Ачуу</a>
+                    </div>
+                </div>`;
+            }).join('');
+        } catch (e) {
+            box.innerHTML = '<div class="delivery-empty">Жүктөлбөдү</div>';
+        }
+    }
+
+    window.dCopyCourierLink = function (phone, name) {
+        const link = courierLink(phone, name);
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(link).then(() => alert('Шилтeme көчүрүлдү!\n\nWhatsApp\'ка жибер:\n' + link));
+        } else {
+            prompt('Шилтemeni көчүр:', link);
+        }
+    };
+
+    window.dAddCourier = async function () {
+        const name = q('dCourierName').value.trim();
+        const phone = q('dCourierPhone').value.trim();
+        if (!name || !phone) {
+            alert('Аты жана телефонду жазыңыз');
+            return;
+        }
+        const res = await fetch('/api/couriers/register-phone', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
+        if (!res.ok) {
+            alert('Кошулбай калды — телефон кайталанган болушу мүmкүн');
+            return;
+        }
+        const saved = await res.json();
+        q('dCourierName').value = '';
+        q('dCourierPhone').value = '';
+        const link = courierLink(saved.phone, saved.name);
+        alert('✅ ' + saved.name + ' кошулду!\n\nКурьерге жибер:\n' + link);
+        loadCouriers();
+        loadCourierActivity();
+    };
+
+    window.dLoadCouriers = loadCouriers;
+    window.dLoadCourierActivity = loadCourierActivity;
 
     init();
 })();

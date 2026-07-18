@@ -153,4 +153,20 @@ public interface CustomerOrderRepository
             Long courierId,
             List<String> statuses
     );
+
+    @Query("SELECT COUNT(o) FROM CustomerOrder o WHERE o.courierId = :courierId "
+            + "AND o.orderStatus = 'DELIVERED' AND o.deliveredAt >= :since")
+    long countDeliveredSince(
+            @Param("courierId") Long courierId,
+            @Param("since") LocalDateTime since
+    );
+
+    List<CustomerOrder> findTop8ByCourierIdAndOrderStatusOrderByDeliveredAtDesc(
+            Long courierId,
+            String orderStatus
+    );
+
+    List<CustomerOrder> findTop40ByOrderStatusAndCourierIdIsNotNullOrderByDeliveredAtDesc(
+            String orderStatus
+    );
 }

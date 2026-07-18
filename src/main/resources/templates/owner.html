@@ -113,8 +113,9 @@
             </p>
             <div class="form-grid">
                 <input id="courierName" class="input" placeholder="Аты (мисалы: Азамат)">
-                <input id="courierChatId" class="input" placeholder="Telegram ID (мисалы: 123456789)">
-                <input id="courierPhone" class="input" placeholder="Телефон (милдеттүү эмес)">
+                <input id="courierPhone" class="input" placeholder="Телефон (мисалы: 0990123456)" inputmode="tel">
+                <input id="courierChatId" class="input" placeholder="Telegram ID (милдеттүү эмес)">
+                <p style="font-size:12px;color:var(--muted);margin:8px 0">Телефон жазсаң — курьер /courier панелине өзү кирет</p>
                 <button class="btn gold" onclick="addCourier()">Курьер кошуу</button>
             </div>
         </div>
@@ -277,24 +278,42 @@
         const telegramChatId = document.getElementById('courierChatId').value.trim();
         const phone = document.getElementById('courierPhone').value.trim();
 
-        if (!name || !telegramChatId) {
-            alert('Аты жана Telegram ID толтуруңуз');
+        if (!name) {
+            alert('Атын жазыңыз');
+            return;
+        }
+        if (!phone && !telegramChatId) {
+            alert('Телефон же Telegram ID керек');
             return;
         }
 
-        const response = await fetch('/api/couriers', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, telegramChatId, phone, active: true })
-        });
+        let response;
+        if (phone) {
+            response = await fetch('/api/couriers/register-phone', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone })
+            });
+        } else {
+            response = await fetch('/api/couriers', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, telegramChatId, phone, active: true })
+            });
+        }
 
         if (response.ok) {
+            const saved = await response.json();
+            const link = location.origin + '/courier?phone=' + encodeURIComponent(saved.phone || phone);
             document.getElementById('courierName').value = '';
             document.getElementById('courierChatId').value = '';
             document.getElementById('courierPhone').value = '';
             loadCouriers();
+            if (saved.phone) {
+                alert('Кошулду!\n\nКурьерге бул шилтemeni жибер:\n' + link);
+            }
         } else {
-            alert('Кошулбай калды — ID кайталанган болушу мүмкүн');
+            alert('Кошулбай калды — телефон кайталанган болушу мүмкүн');
         }
     }
 

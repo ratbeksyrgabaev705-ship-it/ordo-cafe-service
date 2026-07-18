@@ -33,4 +33,8 @@ public interface CourierNotificationRepository extends JpaRepository<CourierNoti
     /** Баш тартуу — OFFER окуган (read) */
     @Query("SELECT n.orderId FROM CourierNotification n WHERE n.courierId = :courierId AND n.type = 'OFFER' AND n.readFlag = true")
     List<Long> findDeclinedOfferOrderIds(@Param("courierId") Long courierId);
+
+    long countByCourierIdAndTypeAndReadFlagFalse(Long courierId, String type);
+
+    List<CourierNotification> findTop8ByCourierIdOrderByCreatedAtDesc(Long courierId);
 }
