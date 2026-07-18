@@ -13,14 +13,14 @@
         .hub p { color: #94a3b8; margin-bottom: 32px; line-height: 1.5; }
         .hub-links { display: grid; gap: 10px; text-align: left; margin-bottom: 32px; }
         .hub-link {
-            display: block; padding: 16px 20px;
+            display: block; padding: 18px 20px;
             background: #1e293b; border: 1px solid #334155; border-radius: 14px;
             color: #fff; text-decoration: none; font-weight: 700; transition: border-color 0.2s, transform 0.15s;
         }
         .hub-link:hover { border-color: #dc2626; transform: translateY(-1px); }
-        .hub-link-featured { padding: 20px; border-width: 2px; }
-        .hub-link-featured small {
-            display: block; font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.75);
+        .hub-link-name { font-size: 18px; display: block; }
+        .hub-link-tagline {
+            display: block; font-size: 13px; font-weight: 500; color: rgba(255,255,255,0.75);
             margin-top: 6px; line-height: 1.4;
         }
         .hub-admin { display: grid; gap: 8px; text-align: left; margin-top: 8px; }
@@ -30,27 +30,24 @@
 </head>
 <body>
 <div class="hub">
-    <h1>🍽 Базар-Коргон Delivery</h1>
-    <p>Базар-Коргон шаары — ресторан тандаңыз</p>
+    <h1>🍽 Базар-Коргон</h1>
+    <p>Кафeni тандаңыз — менюсу ачылат</p>
 
     <div class="hub-links" th:if="${!restaurants.isEmpty()}">
         <a th:each="r : ${restaurants}"
-           class="hub-link hub-link-featured"
-           th:href="@{/r/{slug}(slug=${r.slug})}"
+           class="hub-link"
+           th:href="@{'/' + ${r.slug}}"
            th:style="|background:linear-gradient(135deg, ${r.accentColor != null && !#strings.isEmpty(r.accentColor) ? r.accentColor : '#475569'}, #1e293b); border-color:${r.accentColor != null && !#strings.isEmpty(r.accentColor) ? r.accentColor : '#64748b'};|">
-            <span th:text="|${r.emoji != null ? r.emoji : '🏪'} ${r.name} — Кардар менюсу|">Ресторан</span>
-            <small th:text="${r.tagline != null && !#strings.isEmpty(r.tagline) ? r.tagline + ' →' : 'Заказ берүү →'}">Заказ берүү →</small>
+            <span class="hub-link-name" th:text="|${r.emoji != null ? r.emoji : '🏪'} ${r.name}|">Кафе</span>
+            <span class="hub-link-tagline" th:text="${r.tagline != null && !#strings.isEmpty(r.tagline) ? r.tagline : 'Менюну көрүү →'}">Менюну көрүү →</span>
         </a>
     </div>
-    <div class="hub-empty" th:if="${restaurants.isEmpty()}">Ресторан табылган жок</div>
+    <div class="hub-empty" th:if="${restaurants.isEmpty()}">Кафе табылган жок</div>
 
-    <p class="hub-admin-title">Админ панелдер</p>
+    <p class="hub-admin-title">Админ</p>
     <div class="hub-admin">
-        <a class="hub-link" href="/ratlion">🔥 Ratlion (заказ текшерүү)</a>
-        <a class="hub-link" href="/courier">🛵 Курьер панели</a>
-        <a th:each="r : ${restaurants}" class="hub-link"
-           th:href="@{/kitchen(slug=${r.slug})}"
-           th:text="|🏪 ${r.name} — Ашкана|">Ашкана</a>
+        <a class="hub-link" href="/ratlion">🔥 Ratlion</a>
+        <a class="hub-link" href="/courier">🛵 Курьер</a>
     </div>
 </div>
 </body>

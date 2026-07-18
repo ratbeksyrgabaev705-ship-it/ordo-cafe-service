@@ -120,7 +120,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         Restaurant family = restaurantRepository.findBySlug("family").orElse(null);
         if (family == null) {
             family = buildRestaurant(
-                    "FAMILY_PARK", "family", "F", "#5C1A1A", "FP",
+                    "Family Park", "family", "F", "#5C1A1A", "FP",
                     "Даамдуу тамактар — үй-бүлөңүз үчүн"
             );
             restaurantRepository.save(family);
@@ -129,8 +129,8 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         }
         family.setActive(true);
         family.setAcceptingOrders(true);
-        family.setName("FAMILY_PARK");
-        family.setCustomerUrl("/r/family");
+        family.setName("Family Park");
+        family.setCustomerUrl("/family");
         if (family.getAccentColor() == null || family.getAccentColor().isBlank()) {
             family.setAccentColor("#5C1A1A");
         }
@@ -148,8 +148,8 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         }
         if (bk == null) {
             bk = buildRestaurant(
-                    "БАЗАР-КОРГОН", "bazar-korgon", "🍽", "#c9a227", "БК",
-                    "Базар-Коргон шаары — тамак жеткирүү"
+                    "Базар-Коргон", "bazar-korgon", "🍽", "#c9a227", "БК",
+                    "Лагман, плов, самса — Базар-Коргон"
             );
             bk.setAddress("Базар-Коргон шаары");
             restaurantRepository.save(bk);
@@ -159,14 +159,12 @@ public class RestaurantDataInitializer implements CommandLineRunner {
 
         bk.setActive(true);
         bk.setAcceptingOrders(true);
-        bk.setName("БАЗАР-КОРГОН");
-        bk.setCustomerUrl("/r/bazar-korgon");
+        bk.setName("Базар-Коргон");
+        bk.setCustomerUrl("/bazar-korgon");
         if (bk.getAccentColor() == null || bk.getAccentColor().isBlank()) {
             bk.setAccentColor("#c9a227");
         }
-        if (bk.getTagline() == null || bk.getTagline().isBlank()) {
-            bk.setTagline("Базар-Коргон шаары — тамак жеткирүү");
-        }
+        bk.setTagline("Лагман, плов, самса — Базар-Коргон");
         if (bk.getAddress() == null || bk.getAddress().isBlank()) {
             bk.setAddress("Базар-Коргон шаары");
         }
@@ -214,7 +212,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         aga.setActive(true);
         aga.setAcceptingOrders(true);
         aga.setName("Aga-Ini");
-        aga.setCustomerUrl("/r/aga-ini");
+        aga.setCustomerUrl("/aga-ini");
         if (aga.getAccentColor() == null || aga.getAccentColor().isBlank()) {
             aga.setAccentColor("#6B2737");
         }
@@ -691,13 +689,13 @@ public class RestaurantDataInitializer implements CommandLineRunner {
 
     private void migrateFemiliToFamily() {
         restaurantRepository.findBySlug("femili").ifPresent(old -> {
-            old.setName("FAMILY_PARK");
+            old.setName("Family Park");
             old.setSlug("family");
             old.setEmoji("F");
             old.setAccentColor("#5C1A1A");
             old.setOrderPrefix("FP");
             old.setTagline("Даамдуу тамактар — үй-бүлөңүз үчүн");
-            old.setCustomerUrl("/r/family");
+            old.setCustomerUrl("/family");
             restaurantRepository.save(old);
             log.info("Migrated Femili → Family restaurant");
         });
@@ -709,8 +707,8 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         }
 
         List<Restaurant> defaults = List.of(
-                buildRestaurant("БАЗАР-КОРГОН", "bazar-korgon", "🍽", "#c9a227", "БК", "Базар-Коргон шаары — тамак жеткирүү"),
-                buildRestaurant("FAMILY_PARK", "family", "F", "#5C1A1A", "FP", "Даамдуу тамактар — үй-бүлөңүз үчүн"),
+                buildRestaurant("Базар-Коргон", "bazar-korgon", "🍽", "#c9a227", "БК", "Лагман, плов, самса"),
+                buildRestaurant("Family Park", "family", "F", "#5C1A1A", "FP", "Даамдуу тамактар — үй-бүлөңүз үчүн"),
                 buildRestaurant("Aga-Ini", "aga-ini", "AI", "#6B2737", "AI", "Улуттук тамактар — үйдөгү даам")
         );
 
@@ -728,7 +726,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
     ) {
         Restaurant restaurant = new Restaurant(name, slug, emoji, accentColor, orderPrefix);
         restaurant.setTagline(tagline);
-        restaurant.setCustomerUrl("/r/" + slug);
+        restaurant.setCustomerUrl("/" + slug);
         restaurant.setActive(true);
         return restaurant;
     }
@@ -738,7 +736,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
             if (restaurant.getSlug() == null || restaurant.getSlug().isBlank()) {
                 continue;
             }
-            String expected = "/r/" + restaurant.getSlug();
+            String expected = "/" + restaurant.getSlug();
             boolean changed = false;
             if (!expected.equals(restaurant.getCustomerUrl())) {
                 restaurant.setCustomerUrl(expected);

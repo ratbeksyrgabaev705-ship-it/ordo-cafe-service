@@ -55,7 +55,7 @@ public class RestaurantPageService {
         model.addAttribute("restaurantTagline", restaurant.getTagline());
         model.addAttribute("restaurantLogo", restaurant.getLogoUrl());
         model.addAttribute("restaurantBanner", restaurant.getBannerUrl());
-        model.addAttribute("restaurantBase", "/r/" + restaurant.getSlug());
+        model.addAttribute("restaurantBase", publicPath(restaurant));
         model.addAttribute("customerTheme", resolveCustomerTheme(restaurant.getSlug()));
         model.addAttribute("customerCss", resolveCustomerCss(restaurant.getSlug()));
         model.addAttribute("restaurantAddress", restaurant.getAddress() != null ? restaurant.getAddress() : "");
@@ -104,6 +104,6 @@ public class RestaurantPageService {
     }
 
     public String publicPath(Restaurant restaurant) {
-        return "/r/" + restaurant.getSlug();
+        return "/" + restaurant.getSlug();
     }
 }

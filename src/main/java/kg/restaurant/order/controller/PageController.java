@@ -9,8 +9,16 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.Set;
+
 @Controller
 public class PageController {
+
+    private static final Set<String> RESERVED_SLUGS = Set.of(
+            "courier", "kitchen", "ratlion", "ratlion-legacy", "admin", "admin-menu",
+            "owner", "cafe", "platform", "cart", "item", "receipt", "restaurant",
+            "menu", "api", "h2-console", "uploads", "r", "favicon.ico", "error"
+    );
 
     private final RestaurantRepository restaurantRepository;
     private final RestaurantPageService restaurantPageService;
@@ -33,81 +41,52 @@ public class PageController {
         return "hub";
     }
 
-    @GetMapping("/r/{slug}")
+    /** Кардар меню — кыска URL: /bazar-korgon, /family, /aga-ini */
+    @GetMapping("/{slug}")
     public String restaurantMenu(@PathVariable String slug, Model model) {
+        if (isReservedSlug(slug)) {
+            return "redirect:/";
+        }
         return renderRestaurantPage(slug, model, "index");
     }
 
-    @GetMapping("/r/{slug}/")
+    @GetMapping("/{slug}/")
     public String restaurantMenuTrailingSlash(@PathVariable String slug) {
-        return "redirect:/r/" + slug;
+        return "redirect:/" + restaurantPageService.normalizeSlug(slug);
     }
 
-    @GetMapping("/r/{slug}/cart")
+    @GetMapping("/{slug}/cart")
     public String restaurantCart(@PathVariable String slug, Model model) {
+        if (isReservedSlug(slug)) {
+            return "redirect:/";
+        }
         return renderRestaurantPage(slug, model, "cart");
     }
 
-    @GetMapping("/r/{slug}/item")
+    @GetMapping("/{slug}/item")
     public String restaurantItem(@PathVariable String slug, Model model) {
+        if (isReservedSlug(slug)) {
+            return "redirect:/";
+        }
         return renderRestaurantPage(slug, model, "item");
     }
 
-    @GetMapping("/r/{slug}/receipt")
+    @GetMapping("/{slug}/receipt")
     public String restaurantReceipt(@PathVariable String slug, Model model) {
+        if (isReservedSlug(slug)) {
+            return "redirect:/";
+        }
         return renderRestaurantPage(slug, model, "receipt");
     }
 
-    /** Эски шилтемелер → Базар-Коргон */
-    @GetMapping("/cart")
-    public String legacyCart() {
-        return "redirect:/r/bazar-korgon/cart";
-    }
-
-    @GetMapping("/item")
-    public String legacyItem(@RequestParam(required = false) Long id) {
-        if (id != null) {
-            return "redirect:/r/bazar-korgon/item?id=" + id;
-        }
-        return "redirect:/r/bazar-korgon/item";
-    }
-
-    @GetMapping("/receipt")
-    public String legacyReceipt() {
-        return "redirect:/r/bazar-korgon/receipt";
-    }
-
-    @GetMapping("/r/ordo")
-    public String legacyOrdoMenu() {
-        return "redirect:/r/bazar-korgon";
-    }
-
-    @GetMapping("/r/ordo/cart")
-    public String legacyOrdoCart() {
-        return "redirect:/r/bazar-korgon/cart";
-    }
-
-    @GetMapping("/r/ordo/item")
-    public String legacyOrdoItem(@RequestParam(required = false) Long id) {
-        if (id != null) {
-            return "redirect:/r/bazar-korgon/item?id=" + id;
-        }
-        return "redirect:/r/bazar-korgon/item";
-    }
-
-    @GetMapping("/r/ordo/receipt")
-    public String legacyOrdoReceipt() {
-        return "redirect:/r/bazar-korgon/receipt";
-    }
-
-    @GetMapping("/r/{slug}/order/{orderId}")
+    @GetMapping("/{slug}/order/{orderId}")
     public String orderStatus(
             @PathVariable String slug,
             @PathVariable Long orderId,
             Model model
     ) {
-        if ("femili".equalsIgnoreCase(slug)) {
-            slug = "family";
+        if (isReservedSlug(slug)) {
+            return "redirect:/";
         }
         Restaurant restaurant = restaurantPageService.findActiveBySlug(slug).orElse(null);
         if (restaurant == null) {
@@ -116,6 +95,66 @@ public class PageController {
         restaurantPageService.enrichModel(model, restaurant);
         model.addAttribute("orderId", orderId);
         return "order-status";
+    }
+
+    /** Эski /r/... шилтемелер */
+    @GetMapping("/r/{slug}")
+    public String legacyRestaurantMenu(@PathVariable String slug) {
+        return "redirect:/" + restaurantPageService.normalizeSlug(slug);
+    }
+
+    @GetMapping("/r/{slug}/cart")
+    public String legacyRestaurantCart(@PathVariable String slug) {
+        return "redirect:/" + restaurantPageService.normalizeSlug(slug) + "/cart";
+    }
+
+    @GetMapping("/r/{slug}/item")
+    public String legacyRestaurantItem(@PathVariable String slug, @RequestParam(required = false) Long id) {
+        String base = "/" + restaurantPageService.normalizeSlug(slug) + "/item";
+        return id != null ? "redirect:" + base + "?id=" + id : "redirect:" + base;
+    }
+
+    @GetMapping("/r/{slug}/receipt")
+    public String legacyRestaurantReceipt(@PathVariable String slug) {
+        return "redirect:/" + restaurantPageService.normalizeSlug(slug) + "/receipt";
+    }
+
+    @GetMapping("/r/{slug}/order/{orderId}")
+    public String legacyOrderStatus(@PathVariable String slug, @PathVariable Long orderId) {
+        return "redirect:/" + restaurantPageService.normalizeSlug(slug) + "/order/" + orderId;
+    }
+
+    @GetMapping("/cart")
+    public String legacyCart() {
+        return "redirect:/bazar-korgon/cart";
+    }
+
+    @GetMapping("/item")
+    public String legacyItem(@RequestParam(required = false) Long id) {
+        if (id != null) {
+            return "redirect:/bazar-korgon/item?id=" + id;
+        }
+        return "redirect:/bazar-korgon/item";
+    }
+
+    @GetMapping("/receipt")
+    public String legacyReceipt() {
+        return "redirect:/bazar-korgon/receipt";
+    }
+
+    @GetMapping("/r/ordo")
+    public String legacyOrdoMenu() {
+        return "redirect:/bazar-korgon";
+    }
+
+    @GetMapping("/r/ordo/cart")
+    public String legacyOrdoCart() {
+        return "redirect:/bazar-korgon/cart";
+    }
+
+    @GetMapping("/femili")
+    public String femiliShortcut() {
+        return "redirect:/family";
     }
 
     /** Restaurant Panel — меню, ашкана, жөндөмөлөр (Panel 3) */
@@ -183,28 +222,11 @@ public class PageController {
         return "redirect:/ratlion";
     }
 
-    @GetMapping("/family")
-    public String familyShortcut() {
-        return "redirect:/r/family";
-    }
-
-    @GetMapping("/femili")
-    public String femiliShortcut() {
-        return "redirect:/r/family";
-    }
-
-    @GetMapping("/aga-ini")
-    public String agaIniShortcut() {
-        return "redirect:/r/aga-ini";
-    }
-
-    /** Ratlion Delivery Service — борбордук админ (Panel 2) */
     @GetMapping("/ratlion")
     public String ratlion() {
         return "delivery";
     }
 
-    /** Legacy ratlion template */
     @GetMapping("/ratlion-legacy")
     public String ratlionLegacy(
             @RequestParam(required = false) String slug,
@@ -220,9 +242,13 @@ public class PageController {
         return "ratlion";
     }
 
+    private boolean isReservedSlug(String slug) {
+        return slug != null && RESERVED_SLUGS.contains(slug.toLowerCase(java.util.Locale.ROOT));
+    }
+
     private String renderRestaurantPage(String slug, Model model, String template) {
         if ("femili".equalsIgnoreCase(slug)) {
-            return "redirect:/r/family";
+            return "redirect:/family";
         }
         Restaurant restaurant = restaurantPageService.findBySlug(slug).orElse(null);
         if (restaurant == null) {
