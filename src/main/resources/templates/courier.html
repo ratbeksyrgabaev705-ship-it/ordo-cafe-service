@@ -52,6 +52,11 @@
         .c-address-label { display: block; font-size: 11px; font-weight: 800; color: var(--c-accent-dark); text-transform: uppercase; margin-bottom: 6px; }
         .c-address-text { display: block; font-size: 16px; font-weight: 800; color: #0f172a; line-height: 1.45; margin-bottom: 4px; }
         .c-address-hint { font-size: 12px; font-weight: 700; color: var(--c-accent); }
+        .c-map-row { display: flex; gap: 8px; margin-bottom: 8px; }
+        .c-map-row a { flex: 1; text-align: center; padding: 10px 6px; border-radius: 10px; font-size: 12px; font-weight: 800; text-decoration: none; color: #fff; }
+        .c-map-2gis { background: #16a34a; }
+        .c-map-gmaps { background: #2563eb; }
+        .c-tg-hint { background: #fef3c7; color: #92400e; border-radius: 12px; padding: 12px 14px; font-size: 12px; line-height: 1.5; margin-bottom: 12px; font-weight: 600; }
         .c-call { display: block; text-align: center; padding: 12px; border-radius: 12px; background: var(--c-gold); color: #fff; text-decoration: none; font-weight: 800; margin-bottom: 8px; }
         .c-deliver { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--c-accent); color: #fff; font-weight: 800; font-size: 15px; cursor: pointer; }
         .c-pickup { width: 100%; padding: 14px; border: none; border-radius: 12px; background: #2563eb; color: #fff; font-weight: 800; font-size: 15px; cursor: pointer; margin-bottom: 8px; }
@@ -126,6 +131,8 @@
             </div>
         </div>
 
+        <div id="inAppHint" class="c-tg-hint c-hidden"></div>
+
         <div id="alertBox" class="c-notify-wrap c-hidden"></div>
 
         <div class="c-tabs">
@@ -183,22 +190,35 @@
         const q = encodeURIComponent(normalizeAddress(address));
         return 'https://2gis.ru/bishkek/search/' + q;
     }
-    function build2gisAndroidIntent(address) {
-        const norm = normalizeAddress(address);
-        const path = '2gis.ru/bishkek/search/' + encodeURIComponent(norm);
-        const fallback = encodeURIComponent(build2gisSearchUrl(address));
-        return 'intent://' + path + '#Intent;scheme=https;package=ru.dublgis.dgismobile;S.browser_fallback_url=' + fallback + ';end';
-    }
-    window.open2gisAddress = function (address) {
-        if (!address) return;
-        const httpsUrl = build2gisSearchUrl(address);
-        const isAndroid = /Android/i.test(navigator.userAgent);
-        if (isAndroid) {
-            window.location.href = build2gisAndroidIntent(address);
-            return;
+    function get2gisHref(address) {
+        const q = encodeURIComponent(normalizeAddress(address));
+        const https = build2gisSearchUrl(address);
+        if (/Android/i.test(navigator.userAgent)) {
+            return 'intent://2gis.ru/bishkek/search/' + q
+                + '#Intent;scheme=https;package=ru.dublgis.dgismobile;S.browser_fallback_url='
+                + encodeURIComponent(https) + ';end';
         }
-        window.location.href = httpsUrl;
-    };
+        return https;
+    }
+    function buildGoogleMapsUrl(address) {
+        return 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(normalizeAddress(address));
+    }
+    function buildDgisSchemeUrl(address) {
+        return 'dgis://2gis.ru/bishkek/search/' + encodeURIComponent(normalizeAddress(address));
+    }
+    function isInAppBrowser() {
+        return /Telegram|WhatsApp|Instagram|FBAN|FBAV/i.test(navigator.userAgent);
+    }
+    function showInAppHint() {
+        const box = document.getElementById('inAppHint');
+        if (!box) return;
+        if (isInAppBrowser()) {
+            box.classList.remove('c-hidden');
+            box.innerHTML = '⚠️ Telegram/WhatsApp ичинде 2GIS ачылбай калат.<br>Өйдөгө <strong>⋮ → Chrome\'до ач</strong> же Safari колдон.';
+        } else {
+            box.classList.add('c-hidden');
+        }
+    }
     window.copyAddress = function (address) {
         if (!address) return;
         if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -213,11 +233,18 @@
     function addressButton(o) {
         const addr = o.address || '';
         if (!addr) return '<div class="c-order-meta">📍 Дарек жок</div>';
-        return `<button type="button" class="c-address" onclick="open2gisAddress(${JSON.stringify(addr)})">
-            <span class="c-address-label">📍 Дарек — 2GIS ачуу</span>
+        const href2gis = get2gisHref(addr);
+        const hrefDgis = buildDgisSchemeUrl(addr);
+        const hrefGmaps = buildGoogleMapsUrl(addr);
+        return `<a class="c-address" href="${href2gis}">
+            <span class="c-address-label">📍 Дарек — 2GIS</span>
             <span class="c-address-text">${esc(addr)}</span>
-            <span class="c-address-hint">🗺 Бас — 2GIS тиркемesi ачылат</span>
-        </button>
+            <span class="c-address-hint">🗺 Бас — 2GIS ачылат</span>
+        </a>
+        <div class="c-map-row">
+            <a class="c-map-2gis" href="${hrefDgis}">2GIS app</a>
+            <a class="c-map-gmaps" href="${hrefGmaps}">Google Maps</a>
+        </div>
         <button type="button" class="c-call" style="background:#334155;margin-bottom:8px;border:none;width:100%;cursor:pointer;font-family:inherit" onclick="copyAddress(${JSON.stringify(addr)})">📋 Даректи көчүр</button>`;
     }
 
@@ -305,6 +332,7 @@
         document.getElementById('profileName').textContent = courier.name || 'Курьер';
         document.getElementById('profilePhone').textContent = '📞 ' + (courier.phone || '—');
         document.getElementById('headerSub').textContent = courier.name + ' · жеке панель';
+        showInAppHint();
         refreshAll();
     }
 
