@@ -24,6 +24,7 @@ public class Courier {
     @Column(unique = true)
     private String telegramChatId;
 
+    @Column(unique = true)
     private String phone;
 
     private Boolean active = false;

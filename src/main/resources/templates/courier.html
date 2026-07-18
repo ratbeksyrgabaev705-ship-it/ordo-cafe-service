@@ -168,6 +168,7 @@
     <div class="c-profile-menu c-hidden" id="profileMenu">
         <div class="c-profile-menu-name" id="profileName">—</div>
         <div class="c-profile-menu-phone" id="profilePhone">—</div>
+        <div class="c-profile-menu-phone" id="profileLink" style="font-size:11px;word-break:break-all;margin-bottom:10px"></div>
         <button type="button" onclick="courierLogout()">Чыгуу</button>
     </div>
 </header>
@@ -175,7 +176,8 @@
 <main class="c-wrap">
     <section id="loginBox" class="c-login">
         <h2 style="font-size:15px;font-weight:800;margin-bottom:12px">📱 Кирүү</h2>
-        <p class="c-login-note">Телефонуң менен кир — өз заказдарыңды гана көрөсүң.</p>
+        <p class="c-login-note">Телефонуң менен бир жолу кир — кийин <strong>автоматтык</strong> сакталат.</p>
+        <div id="savedPhoneHint" class="c-login-note c-hidden" style="color:var(--green);margin-bottom:12px"></div>
         <div class="c-field" style="margin-top:14px">
             <label>Атыңыз</label>
             <input id="loginName" class="c-input" type="text" placeholder="Мисалы: Сыргый">
@@ -456,20 +458,100 @@
         document.getElementById('headerSub').textContent = 'Ratlion';
     }
 
-    function showApp(courier) {
-        currentCourier = courier;
-        localStorage.setItem('courierId', courier.id);
+    const SESSION_KEY = 'courierSessionV1';
+
+    function saveSession(courier) {
+        localStorage.setItem('courierId', String(courier.id));
         localStorage.setItem('courierPhone', courier.phone || '');
         localStorage.setItem('courierName', courier.name || '');
+        localStorage.setItem(SESSION_KEY, JSON.stringify({
+            id: courier.id,
+            phone: courier.phone,
+            name: courier.name,
+            savedAt: Date.now()
+        }));
+    }
+
+    function clearSession() {
+        localStorage.removeItem('courierId');
+        localStorage.removeItem('courierPhone');
+        localStorage.removeItem('courierName');
+        localStorage.removeItem(SESSION_KEY);
+    }
+
+    async function loginWithPhone(phone, name) {
+        const res = await fetch('/api/couriers/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ phone: phone, name: name || undefined })
+        });
+        if (res.status === 404) {
+            const err = await res.json().catch(() => ({}));
+            return { ok: false, needName: true, message: err.message || 'Атыңызды жазыңыз' };
+        }
+        if (!res.ok) return { ok: false, needName: false, message: 'Кирүү ишке ашкан жок' };
+        return { ok: true, courier: await res.json() };
+    }
+
+    async function restoreSession() {
+        let session = null;
+        try {
+            session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+        } catch (e) { session = null; }
+
+        const params = new URLSearchParams(location.search);
+        const urlPhone = params.get('phone') || '';
+        const urlName = params.get('name') || '';
+        const phone = urlPhone || (session && session.phone) || localStorage.getItem('courierPhone') || '';
+        const name = urlName || (session && session.name) || localStorage.getItem('courierName') || '';
+
+        if (phone) document.getElementById('loginPhone').value = phone;
+        if (name) document.getElementById('loginName').value = name;
+
+        if (session && session.id && session.phone && !urlPhone) {
+            const hint = document.getElementById('savedPhoneHint');
+            hint.classList.remove('c-hidden');
+            hint.textContent = '✅ Сакталган аккаунт: ' + session.phone + ' — кирүүдө...';
+        }
+
+        if (!phone) return;
+
+        if (session && session.id) {
+            try {
+                const res = await fetch('/api/couriers/' + session.id);
+                if (res.ok) {
+                    showApp(await res.json());
+                    return;
+                }
+            } catch (e) { /* fallback login */ }
+        }
+
+        const result = await loginWithPhone(phone, name || undefined);
+        if (result.ok) {
+            showApp(result.courier);
+        } else if (result.needName && !name) {
+            const hint = document.getElementById('savedPhoneHint');
+            hint.classList.remove('c-hidden');
+            hint.textContent = '📱 Жаңы номер — атыңызды жазыңыз';
+        }
+    }
+
+    function showApp(courier) {
+        currentCourier = courier;
+        saveSession(courier);
         document.getElementById('loginBox').classList.add('c-hidden');
         document.getElementById('appBox').classList.remove('c-hidden');
         document.getElementById('refreshFab').classList.remove('c-hidden');
         document.getElementById('avatarBtn').classList.remove('c-hidden');
         document.getElementById('bellBtn').classList.remove('c-hidden');
-        const name = courier.name || 'К';
-        document.getElementById('avatarBtn').textContent = name.charAt(0).toUpperCase();
+        const avatarName = courier.name || 'К';
+        document.getElementById('avatarBtn').textContent = avatarName.charAt(0).toUpperCase();
         document.getElementById('profileName').textContent = courier.name || 'Курьер';
         document.getElementById('profilePhone').textContent = '📞 ' + (courier.phone || '—');
+        if (courier.phone) {
+            const link = location.origin + '/courier?phone=' + encodeURIComponent(courier.phone);
+            document.getElementById('profileLink').innerHTML = '🔗 Жеке шилтeme:<br><a href="' + link + '" style="color:var(--green)">' + link + '</a>';
+        }
         document.getElementById('headerSub').textContent = courier.name || 'Ratlion';
         showInAppHint();
         refreshAll();
@@ -486,20 +568,18 @@
             return;
         }
         try {
-            let res = await fetch('/api/couriers/by-phone?phone=' + encodeURIComponent(phone));
-            if (res.ok) { showApp(await res.json()); return; }
-            if (!name) {
-                errEl.textContent = 'Жаңы аккаунт үчүн атыңызды жазыңыз';
+            const result = await loginWithPhone(phone, name || undefined);
+            if (result.ok) {
+                showApp(result.courier);
+                return;
+            }
+            if (result.needName) {
+                errEl.textContent = result.message || 'Жаңы аккаунт үчүн атыңызды жазыңыз';
                 errEl.classList.remove('c-hidden');
                 return;
             }
-            res = await fetch('/api/couriers/register-phone', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name, phone })
-            });
-            if (!res.ok) throw new Error('fail');
-            showApp(await res.json());
+            errEl.textContent = result.message || 'Кирүү ишке ашкан жок';
+            errEl.classList.remove('c-hidden');
         } catch (e) {
             errEl.textContent = 'Кирүү ишке ашкан жок';
             errEl.classList.remove('c-hidden');
@@ -507,31 +587,14 @@
     }
 
     function courierLogout() {
-        localStorage.removeItem('courierId');
-        localStorage.removeItem('courierPhone');
-        localStorage.removeItem('courierName');
+        clearSession();
         document.getElementById('profileMenu').classList.add('c-hidden');
+        document.getElementById('savedPhoneHint').classList.add('c-hidden');
         showLogin();
     }
 
     async function tryAutoLogin() {
-        const params = new URLSearchParams(location.search);
-        const phone = params.get('phone') || localStorage.getItem('courierPhone') || '';
-        const name = params.get('name') || localStorage.getItem('courierName') || '';
-        if (phone) document.getElementById('loginPhone').value = phone;
-        if (name) document.getElementById('loginName').value = name;
-        if (!phone) return;
-        try {
-            let res = await fetch('/api/couriers/by-phone?phone=' + encodeURIComponent(phone));
-            if (res.ok && name) {
-                res = await fetch('/api/couriers/register-phone', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, phone })
-                });
-            }
-            if (res.ok) showApp(await res.json());
-        } catch (e) { /* login */ }
+        await restoreSession();
     }
 
     async function loadHistoryCache() {

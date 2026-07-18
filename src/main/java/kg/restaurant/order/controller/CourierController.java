@@ -52,12 +52,55 @@ public class CourierController {
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<Courier> getById(@PathVariable Long id) {
+        return courierRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    /** Телефон менен кирүү — аккаунт бар болсо аты талап кылынбайт */
+    @PostMapping("/login")
+    public ResponseEntity<?> loginByPhone(@RequestBody Map<String, String> body) {
+        String phone = PhoneUtils.normalize(body.get("phone"));
+        String name = body.get("name");
+        if (phone.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Телефон талап кылынат"));
+        }
+
+        var existing = courierRepository.findByPhone(phone);
+        if (existing.isPresent()) {
+            Courier courier = existing.get();
+            if (name != null && !name.isBlank()) {
+                courier.setName(name.trim());
+            }
+            if (!Boolean.TRUE.equals(courier.getActive())) {
+                courier.setActive(true);
+            }
+            return ResponseEntity.ok(courierRepository.save(courier));
+        }
+
+        if (name == null || name.isBlank()) {
+            return ResponseEntity.status(404).body(Map.of(
+                    "error", "NOT_FOUND",
+                    "message", "Жаңы курьер — атыңызды жазыңыз"
+            ));
+        }
+
+        Courier courier = new Courier();
+        courier.setName(name.trim());
+        courier.setPhone(phone);
+        courier.setTelegramChatId("phone:" + phone);
+        courier.setActive(true);
+        return ResponseEntity.ok(courierRepository.save(courier));
+    }
+
     /** Телефон менен катталуу (Telegram жок тест үчүн) */
     @PostMapping("/register-phone")
     public ResponseEntity<Courier> registerByPhone(@RequestBody Map<String, String> body) {
         String phone = PhoneUtils.normalize(body.get("phone"));
         String name = body.get("name");
-        if (phone.isBlank() || name == null || name.isBlank()) {
+        if (phone.isBlank()) {
             return ResponseEntity.badRequest().build();
         }
 
@@ -68,11 +111,13 @@ public class CourierController {
                     }
                     if (!Boolean.TRUE.equals(existing.getActive())) {
                         existing.setActive(true);
-                        return ResponseEntity.ok(courierRepository.save(existing));
                     }
                     return ResponseEntity.ok(courierRepository.save(existing));
                 })
                 .orElseGet(() -> {
+                    if (name == null || name.isBlank()) {
+                        return ResponseEntity.badRequest().build();
+                    }
                     Courier courier = new Courier();
                     courier.setName(name.trim());
                     courier.setPhone(phone);
