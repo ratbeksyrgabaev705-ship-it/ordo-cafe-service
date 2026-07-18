@@ -7,7 +7,7 @@ databases:
 
 services:
   - type: web
-    name: bazar-korgon
+    name: ordo-cafe
     runtime: docker
     plan: free
     healthCheckPath: /

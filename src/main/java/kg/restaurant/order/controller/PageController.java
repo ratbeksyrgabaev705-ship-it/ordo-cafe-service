@@ -41,7 +41,37 @@ public class PageController {
         return "hub";
     }
 
-    /** Кардар меню — кыска URL: /bazar-korgon, /family, /aga-ini */
+    @GetMapping("/bazar-korgon")
+    public String bazarKorgonMenu(Model model) {
+        return renderRestaurantPage("bazar-korgon", model, "index");
+    }
+
+    @GetMapping("/bazar-korgon/cart")
+    public String bazarKorgonCart(Model model) {
+        return renderRestaurantPage("bazar-korgon", model, "cart");
+    }
+
+    @GetMapping("/family")
+    public String familyMenu(Model model) {
+        return renderRestaurantPage("family", model, "index");
+    }
+
+    @GetMapping("/family/cart")
+    public String familyCart(Model model) {
+        return renderRestaurantPage("family", model, "cart");
+    }
+
+    @GetMapping("/aga-ini")
+    public String agaIniMenu(Model model) {
+        return renderRestaurantPage("aga-ini", model, "index");
+    }
+
+    @GetMapping("/aga-ini/cart")
+    public String agaIniCart(Model model) {
+        return renderRestaurantPage("aga-ini", model, "cart");
+    }
+
+    /** Кардар меню — кыска URL: /slug */
     @GetMapping("/{slug}")
     public String restaurantMenu(@PathVariable String slug, Model model) {
         if (isReservedSlug(slug)) {
