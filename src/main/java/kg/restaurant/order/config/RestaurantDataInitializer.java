@@ -52,9 +52,11 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         migrateFemiliToFamily();
         ensureRestaurantsActive();
         ensureFamilyRestaurant();
+        ensureOrdoRestaurant();
         syncCustomerUrls();
         backfillRestaurantIds();
         seedFamilyMenuIfEmpty();
+        seedOrdoMenuIfEmpty();
         ensureFamilyPizzas();
         syncFamilyMenuImages();
         syncFamilyMenuDetails();
@@ -130,6 +132,126 @@ public class RestaurantDataInitializer implements CommandLineRunner {
             family.setAccentColor("#5C1A1A");
         }
         restaurantRepository.save(family);
+    }
+
+    /** Ordo Cafe — улуттук тамактар */
+    private void ensureOrdoRestaurant() {
+        Restaurant ordo = restaurantRepository.findBySlug("ordo").orElse(null);
+        if (ordo == null) {
+            ordo = buildRestaurant(
+                    "ОРДО КАФЕ", "ordo", "🍽", "#c9a227", "ОД",
+                    "Улуттук тамактар жана кофе"
+            );
+            ordo.setAddress("Базар-Коргон шаары");
+            restaurantRepository.save(ordo);
+            log.info("Created Ordo Cafe restaurant");
+            return;
+        }
+        ordo.setActive(true);
+        ordo.setAcceptingOrders(true);
+        ordo.setName("ОРДО КАФЕ");
+        ordo.setCustomerUrl("/r/ordo");
+        if (ordo.getAccentColor() == null || ordo.getAccentColor().isBlank()) {
+            ordo.setAccentColor("#c9a227");
+        }
+        if (ordo.getTagline() == null || ordo.getTagline().isBlank()) {
+            ordo.setTagline("Улуттук тамактар жана кофе");
+        }
+        if (ordo.getAddress() == null || ordo.getAddress().isBlank()) {
+            ordo.setAddress("Базар-Коргон шаары");
+        }
+        restaurantRepository.save(ordo);
+    }
+
+    private void seedOrdoMenuIfEmpty() {
+        Restaurant ordo = restaurantRepository.findBySlug("ordo").orElse(null);
+        if (ordo == null) {
+            return;
+        }
+
+        long existing = menuItemRepository.findByRestaurantId(ordo.getId()).size();
+        if (existing > 0) {
+            return;
+        }
+
+        Long rid = ordo.getId();
+        List<MenuItem> menu = List.of(
+                ordoItem(rid, "Уйгур лагман 0,7", "Уйгурский лагман 0,7", "Лагман", "Лагман",
+                        "Колго чоюлган кесме, уй эти, жашылчалар", "Домашняя лапша с говядиной", 280.0,
+                        "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80"),
+                ordoItem(rid, "Уйгур лагман 1,0", "Уйгурский лагман 1,0", "Лагман", "Лагман",
+                        "Чоң порция уйгур лагманы", "Большая порция уйгурского лагмана", 350.0,
+                        "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80"),
+                ordoItem(rid, "Лагман", "Лагман", "Лагман", "Лагман",
+                        "Кесме, уй эти, жашылчалар", "Лапша с говядиной", 300.0,
+                        "https://images.unsplash.com/photo-1617093727343-374698b8141?w=400&q=80"),
+                ordoItem(rid, "Ганфан", "Ганфан", "Лагман", "Лагман",
+                        "Кесме, күрүч, уй эти", "Лапша с рисом", 320.0,
+                        "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80"),
+                ordoItem(rid, "Плов", "Плов", "Плов", "Плов",
+                        "Күрүч, уй эти, сабиз, пияз", "Рис, говядина, морковь", 350.0,
+                        "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&q=80"),
+                ordoItem(rid, "Этти самса", "Самса с мясом", "Самса", "Самса",
+                        "Тандырда бышырылган этти самса", "Самса с мясом", 80.0,
+                        "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80"),
+                ordoItem(rid, "Кашкын самса", "Самса с тыквой", "Самса", "Самса",
+                        "Кашкын самса", "Самса с тыквой", 70.0,
+                        "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80"),
+                ordoItem(rid, "Шорпа", "Шорпа", "Шорпо", "Шорпо",
+                        "Уй эти, картошка, жашылчалар", "Говядина, картофель", 280.0,
+                        "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&q=80"),
+                ordoItem(rid, "Манты", "Манты", "Улуттук тамактар", "Национальные блюда",
+                        "Бууга бышырылган манты", "Манты на пару", 380.0,
+                        "https://images.unsplash.com/photo-1563245372-28a3042f9a9d?w=400&q=80"),
+                ordoItem(rid, "Куурдак", "Куурдак", "Улуттук тамактар", "Национальные блюда",
+                        "Эт, пияз, сарымсак", "Жареное мясо", 420.0,
+                        "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=80"),
+                ordoItem(rid, "Свежий салат", "Свежий салат", "Салат", "Салаты",
+                        "Жашылчалар", "Свежие овощи", 150.0,
+                        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80"),
+                ordoItem(rid, "Тандыр нан", "Тандыр-лепёшка", "Нан", "Хлеб",
+                        "Жаңы тандыр нан", "Свежая лепёшка", 50.0,
+                        "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80"),
+                ordoItem(rid, "Жашыл чай", "Зелёный чай", "Ичимдиктер", "Напитки",
+                        "Ысыk жашыл чай", "Зелёный чай", 50.0,
+                        "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80"),
+                ordoItem(rid, "Айран", "Айран", "Ичимдиктер", "Напитки",
+                        "Сveжo айран", "Свежий айран", 80.0,
+                        "https://images.unsplash.com/photo-1623065424889-aaaf9e2b7c4d?w=400&q=80")
+        );
+
+        menuItemRepository.saveAll(menu);
+        log.info("Seeded {} menu items for ОРДО КАФЕ (id={})", menu.size(), rid);
+    }
+
+    private MenuItem ordoItem(
+            Long restaurantId,
+            String nameKg,
+            String nameRu,
+            String categoryKg,
+            String categoryRu,
+            String descKg,
+            String descRu,
+            double price,
+            String imageUrl
+    ) {
+        MenuItem item = new MenuItem();
+        item.setRestaurantId(restaurantId);
+        item.setName(nameKg);
+        item.setNameKg(nameKg);
+        item.setNameRu(nameRu);
+        item.setCategory(categoryKg);
+        item.setCategoryKg(categoryKg);
+        item.setCategoryRu(categoryRu);
+        item.setDescriptionKg(descKg);
+        item.setDescriptionRu(descRu);
+        item.setIngredientsKg(descKg);
+        item.setIngredientsRu(descRu);
+        item.setPrice(price);
+        item.setImage(imageUrl);
+        item.setAvailable(true);
+        item.setWeight(400);
+        return item;
     }
 
     private void syncFamilyMenuDetails() {

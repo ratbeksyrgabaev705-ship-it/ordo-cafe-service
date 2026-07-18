@@ -1,11 +1,20 @@
 <!DOCTYPE html>
-<html lang="ky">
+<html lang="ky" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ОРДО КАФЕ</title>
+    <title th:text="${restaurantName}">ОРДО КАФЕ</title>
     <link rel="icon" href="/logo.png" type="image/png">
     <link rel="stylesheet" href="/ordo-customer.css">
+    <script th:inline="javascript">
+        window.RESTAURANT = {
+            id: /*[[${restaurantId}]]*/ 1,
+            slug: /*[[${restaurantSlug}]]*/ 'ordo',
+            name: /*[[${restaurantName}]]*/ 'ОРДО КАФЕ',
+            base: /*[[${restaurantBase}]]*/ '/r/ordo'
+        };
+    </script>
+    <script src="/restaurant-context.js"></script>
     <style>
         :root {
             --item-bg: #fffdf9;
@@ -487,6 +496,9 @@
     }
 
     function getCart() {
+        if (typeof getStoredCart === 'function') {
+            return getStoredCart();
+        }
         try {
             const saved = JSON.parse(localStorage.getItem('cart'));
             return Array.isArray(saved) ? saved : [];
@@ -496,6 +508,10 @@
     }
 
     function saveCart(cart) {
+        if (typeof saveStoredCart === 'function') {
+            saveStoredCart(cart);
+            return;
+        }
         localStorage.setItem('cart', JSON.stringify(cart));
     }
 
@@ -692,7 +708,7 @@
         document.getElementById('mainContent').innerHTML =
             `<div class="error-box">${tr('notFound')}</div>`;
     } else {
-        fetch('/menu')
+        fetch('/menu?restaurantId=' + encodeURIComponent(window.restaurantId || localStorage.getItem('restaurantId') || '1'))
             .then(r => {
                 if (!r.ok) throw new Error('menu');
                 return r.json();

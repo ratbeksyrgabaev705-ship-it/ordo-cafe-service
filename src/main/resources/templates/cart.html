@@ -1,11 +1,20 @@
 <!DOCTYPE html>
-<html lang="ky">
+<html lang="ky" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Себет — ОРДО КАФЕ</title>
+    <title th:text="'Себет — ' + ${restaurantName}">Себет — ОРДО КАФЕ</title>
     <link rel="icon" href="/logo.png" type="image/png">
     <link rel="stylesheet" href="/ordo-customer.css">
+    <script th:inline="javascript">
+        window.RESTAURANT = {
+            id: /*[[${restaurantId}]]*/ 1,
+            slug: /*[[${restaurantSlug}]]*/ 'ordo',
+            name: /*[[${restaurantName}]]*/ 'ОРДО КАФЕ',
+            base: /*[[${restaurantBase}]]*/ '/r/ordo'
+        };
+    </script>
+    <script src="/restaurant-context.js"></script>
     <style>
         body { padding-bottom: 130px; background: #faf6ee; }
 
@@ -235,7 +244,7 @@
 <body>
 <div class="page">
     <header class="header">
-        <button type="button" class="back-btn" onclick="location.href='/'">←</button>
+        <button type="button" class="back-btn" th:onclick="|location.href='${restaurantBase}'|">←</button>
         <div id="headerTitle" class="header-title">Себет</div>
         <div class="header-cart-icon">
             🛒
@@ -248,7 +257,7 @@
             <div style="font-size:48px;">🛒</div>
             <div id="emptyTitle" style="font-weight:900;margin-top:8px;">Себет бош</div>
             <div id="emptyText" style="margin-top:8px;font-size:14px;">Менюдан тамак тандаңыз</div>
-            <button type="button" id="emptyMenuButton" onclick="location.href='/'">Менюга кайтуу</button>
+            <button type="button" id="emptyMenuButton" th:onclick="|location.href='${restaurantBase}'|">Менюга кайтуу</button>
         </div>
 
         <div id="cartContent">
@@ -287,11 +296,11 @@
 </div>
 
 <nav class="bottom-nav">
-    <a href="/" class="nav-item">
+    <a th:href="${restaurantBase}" href="/r/ordo" class="nav-item">
         <span class="nav-icon-wrap">🍴</span>
         <span id="navMenu">Меню</span>
     </a>
-    <a href="/cart" class="nav-item active">
+    <a th:href="${restaurantBase + '/cart'}" href="/r/ordo/cart" class="nav-item active">
         <span class="nav-icon-wrap">
             🛒
             <span id="navBadge" class="nav-badge">0</span>
@@ -301,15 +310,15 @@
 </nav>
 
 <script>
-    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let cart = (typeof getStoredCart === 'function' ? getStoredCart() : JSON.parse(localStorage.getItem("cart") || "[]"));
     cart = cart.map(i => ({
         ...i,
         quantity: Math.max(0, Math.round(Number(i.quantity || 0)))
     }))
         .filter(i => i.quantity > 0);
-    localStorage.setItem("cart", JSON.stringify(cart));
+    localStorage.setItem(typeof cartStorageKey === 'function' ? cartStorageKey() : "cart", JSON.stringify(cart));
 
-    let orderComment = localStorage.getItem("orderComment") || "";
+    let orderComment = (typeof getStoredComment === 'function' ? getStoredComment() : localStorage.getItem("orderComment")) || "";
 
     const DELIVERY_PRICE = 150;
     let currentLanguage = localStorage.getItem("customerLanguage") || "ky";
@@ -359,7 +368,13 @@
         document.getElementById("orderComment").placeholder = t("commentPlaceholder");
     }
 
-    function saveCart() { localStorage.setItem("cart", JSON.stringify(cart)); }
+    function saveCart() {
+        if (typeof saveStoredCart === 'function') {
+            saveStoredCart(cart);
+        } else {
+            localStorage.setItem("cart", JSON.stringify(cart));
+        }
+    }
 
     function renderCart() {
         const empty = document.getElementById("emptyState");
@@ -450,7 +465,7 @@
     function goToCheckout() {
         if (!cart.length) { alert(t("emptyAlert")); return; }
         localStorage.setItem("orderComment", orderComment.trim());
-        window.location.href = "/receipt";
+        window.location.href = (window.restaurantBase || '/r/ordo') + '/receipt';
     }
 
     function formatMoney(v) {
