@@ -397,7 +397,7 @@
         if (ADMIN.color) document.documentElement.style.setProperty('--adm-green', ADMIN.color);
         const base = '/ratlion';
         q('linkRatlion').href = base;
-        q('linkCafe').href = '/cafe?slug=' + encodeURIComponent(scopeSlug || '');
+        q('linkCafe').href = '/kitchen/' + encodeURIComponent(scopeSlug || '');
         q('linkMenu').href = '/r/' + encodeURIComponent(scopeSlug || '');
     }
 

@@ -316,7 +316,7 @@
             const res = await fetch('/api/restaurants/public');
             const list = await res.json();
             document.getElementById('restList').innerHTML = list.map(r =>
-                `<a class="rest-link" href="/cafe?slug=${encodeURIComponent(r.slug)}">${r.emoji || '🏪'} ${escapeHtml(r.name)}</a>`
+                `<a class="rest-link" href="/kitchen/${encodeURIComponent(r.slug)}">${r.emoji || '🏪'} ${escapeHtml(r.name)}</a>`
             ).join('') || '<p style="color:var(--muted)">Ресторан жок</p>';
         } catch (e) {
             document.getElementById('restList').innerHTML = '<p>Жүктөлбөдү</p>';

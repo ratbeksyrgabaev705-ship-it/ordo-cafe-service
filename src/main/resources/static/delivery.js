@@ -257,7 +257,7 @@
                 <div><strong>Дарек</strong><br>${esc(r.address || '—')}</div>
                 <div class="full" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
                     <button class="delivery-btn delivery-btn-sm ${r.active ? 'delivery-btn-green' : 'delivery-btn-outline'}" onclick="dToggleRest(${r.id}, ${!r.active})">${r.active ? 'Ресторанды жабуу' : 'Ресторанды ачуу'}</button>
-                    <a class="delivery-btn delivery-btn-outline delivery-btn-sm" href="/kitchen?slug=${esc(r.slug)}" target="_blank">🍳 Кухня</a>
+                    <a class="delivery-btn delivery-btn-outline delivery-btn-sm" href="/kitchen/${esc(r.slug)}" target="_blank">🍳 Кухня</a>
                     <button class="delivery-btn delivery-btn-outline delivery-btn-sm" onclick="dGoReports(${r.id})">📊 Отчеттор</button>
                 </div>
             </div>`;

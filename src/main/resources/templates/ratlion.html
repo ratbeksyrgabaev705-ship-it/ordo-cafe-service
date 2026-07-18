@@ -882,7 +882,7 @@
         document.title = (k.name || 'RATLION') + ' — Чек текшерүү';
 
         const panelUrl = '/ratlion?slug=' + encodeURIComponent(k.slug || '');
-        const kitchenUrl = '/cafe?slug=' + encodeURIComponent(k.slug || '');
+        const kitchenUrl = '/kitchen/' + encodeURIComponent(k.slug || '');
 
         document.getElementById('scopeLabel').textContent =
             (k.emoji || '🏪') + ' ' + (k.name || 'Ресторан') + ' — чек текшерүү';

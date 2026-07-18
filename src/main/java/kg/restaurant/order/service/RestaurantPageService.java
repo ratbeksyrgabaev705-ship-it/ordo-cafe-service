@@ -25,13 +25,12 @@ public class RestaurantPageService {
         if ("femili".equals(normalized)) {
             return "family";
         }
-        if ("bazar-korgon".equals(normalized)) {
-            return "chaikhana";
+        if ("bazar-korgon".equals(normalized) || "chaikhana".equals(normalized)) {
+            return "ordo-cafe";
         }
         return normalized;
     }
 
-    /** DBден slug боюнча табуу (активдүүлүгүнө карабастан — пanel үчүн). */
     public Optional<Restaurant> findBySlug(String slug) {
         String normalized = normalizeSlug(slug);
         if (normalized.isBlank()) {
@@ -56,6 +55,7 @@ public class RestaurantPageService {
         model.addAttribute("restaurantLogo", restaurant.getLogoUrl());
         model.addAttribute("restaurantBanner", restaurant.getBannerUrl());
         model.addAttribute("restaurantBase", publicPath(restaurant));
+        model.addAttribute("kitchenBase", kitchenPath(restaurant));
         model.addAttribute("customerTheme", resolveCustomerTheme(restaurant.getSlug()));
         model.addAttribute("customerCss", resolveCustomerCss(restaurant.getSlug()));
         model.addAttribute("restaurantAddress", restaurant.getAddress() != null ? restaurant.getAddress() : "");
@@ -71,7 +71,6 @@ public class RestaurantPageService {
         return usesFamilyLayout(slug);
     }
 
-    /** Family-layout кардар UI (hero, категорияlar, bottom nav) */
     public boolean usesFamilyLayout(String slug) {
         String s = normalizeSlug(slug);
         return "family".equals(s) || "aga-ini".equals(s);
@@ -92,18 +91,22 @@ public class RestaurantPageService {
         if ("aga-ini".equals(s)) {
             return "aga-ini";
         }
-        return "chaikhana";
+        return "default";
     }
 
     public String resolveCustomerCss(String slug) {
         return switch (normalizeSlug(slug)) {
             case "family" -> "/family-customer.css";
             case "aga-ini" -> "/aga-ini-customer.css";
-            default -> "/chaikhana-customer.css";
+            default -> "/default-customer.css";
         };
     }
 
     public String publicPath(Restaurant restaurant) {
         return "/" + restaurant.getSlug();
+    }
+
+    public String kitchenPath(Restaurant restaurant) {
+        return "/kitchen/" + restaurant.getSlug();
     }
 }

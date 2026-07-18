@@ -31,7 +31,7 @@ public class PageController {
         this.restaurantPageService = restaurantPageService;
     }
 
-    /** Платформа каталогу — ресторандар тандалат */
+    /** RATLION каталогу — бардыk ресторандар тең */
     @GetMapping("/")
     public String hub(Model model) {
         model.addAttribute("restaurants", restaurantRepository.findAll().stream()
@@ -41,81 +41,26 @@ public class PageController {
         return "hub";
     }
 
-    @GetMapping("/chaikhana")
-    public String chaikhanaMenu(Model model) {
-        return renderRestaurantPage("chaikhana", model, "index");
-    }
-
-    @GetMapping("/chaikhana/cart")
-    public String chaikhanaCart(Model model) {
-        return renderRestaurantPage("chaikhana", model, "cart");
-    }
-
-    @GetMapping("/burger-men")
-    public String burgerMenMenu(Model model) {
-        return renderRestaurantPage("burger-men", model, "index");
-    }
-
-    @GetMapping("/burger-men/cart")
-    public String burgerMenCart(Model model) {
-        return renderRestaurantPage("burger-men", model, "cart");
-    }
-
-    @GetMapping("/zhorolor")
-    public String zhorolorMenu(Model model) {
-        return renderRestaurantPage("zhorolor", model, "index");
-    }
-
-    @GetMapping("/zhorolor/cart")
-    public String zhorolorCart(Model model) {
-        return renderRestaurantPage("zhorolor", model, "cart");
-    }
-
-    @GetMapping("/bazar-korgon")
-    public String legacyBazarKorgonMenu() {
-        return "redirect:/chaikhana";
-    }
-
-    @GetMapping("/bazar-korgon/cart")
-    public String legacyBazarKorgonCart() {
-        return "redirect:/chaikhana/cart";
-    }
-
-    @GetMapping("/bazar-korgon/item")
-    public String legacyBazarKorgonItem(@RequestParam(required = false) Long id) {
-        if (id != null) {
-            return "redirect:/chaikhana/item?id=" + id;
+    /** Ресторан панели — тандоо же slug боюнча */
+    @GetMapping("/kitchen")
+    public String kitchenPicker(
+            @RequestParam(required = false) String slug,
+            Model model
+    ) {
+        if (slug != null && !slug.isBlank()) {
+            return "redirect:/kitchen/" + restaurantPageService.normalizeSlug(slug);
         }
-        return "redirect:/chaikhana/item";
+        return "kitchen";
     }
 
-    @GetMapping("/bazar-korgon/receipt")
-    public String legacyBazarKorgonReceipt() {
-        return "redirect:/chaikhana/receipt";
+    @GetMapping("/kitchen/{slug}")
+    public String kitchenPanel(@PathVariable String slug, Model model) {
+        resolveKitchenPanel(slug, model);
+        return "kitchen";
     }
 
-    @GetMapping("/family")
-    public String familyMenu(Model model) {
-        return renderRestaurantPage("family", model, "index");
-    }
-
-    @GetMapping("/family/cart")
-    public String familyCart(Model model) {
-        return renderRestaurantPage("family", model, "cart");
-    }
-
-    @GetMapping("/aga-ini")
-    public String agaIniMenu(Model model) {
-        return renderRestaurantPage("aga-ini", model, "index");
-    }
-
-    @GetMapping("/aga-ini/cart")
-    public String agaIniCart(Model model) {
-        return renderRestaurantPage("aga-ini", model, "cart");
-    }
-
-    /** Кардар меню — кыска URL: /slug */
-    @GetMapping("/{slug}")
+    /** Кардар беттери — /{slug} (CSS/JS файлдарын кароо) */
+    @GetMapping("/{slug:[a-z0-9-]+}")
     public String restaurantMenu(@PathVariable String slug, Model model) {
         if (isReservedSlug(slug)) {
             return "redirect:/";
@@ -123,12 +68,12 @@ public class PageController {
         return renderRestaurantPage(slug, model, "index");
     }
 
-    @GetMapping("/{slug}/")
+    @GetMapping("/{slug:[a-z0-9-]+}/")
     public String restaurantMenuTrailingSlash(@PathVariable String slug) {
         return "redirect:/" + restaurantPageService.normalizeSlug(slug);
     }
 
-    @GetMapping("/{slug}/cart")
+    @GetMapping("/{slug:[a-z0-9-]+}/cart")
     public String restaurantCart(@PathVariable String slug, Model model) {
         if (isReservedSlug(slug)) {
             return "redirect:/";
@@ -136,7 +81,7 @@ public class PageController {
         return renderRestaurantPage(slug, model, "cart");
     }
 
-    @GetMapping("/{slug}/item")
+    @GetMapping("/{slug:[a-z0-9-]+}/item")
     public String restaurantItem(@PathVariable String slug, Model model) {
         if (isReservedSlug(slug)) {
             return "redirect:/";
@@ -144,7 +89,7 @@ public class PageController {
         return renderRestaurantPage(slug, model, "item");
     }
 
-    @GetMapping("/{slug}/receipt")
+    @GetMapping("/{slug:[a-z0-9-]+}/receipt")
     public String restaurantReceipt(@PathVariable String slug, Model model) {
         if (isReservedSlug(slug)) {
             return "redirect:/";
@@ -152,7 +97,7 @@ public class PageController {
         return renderRestaurantPage(slug, model, "receipt");
     }
 
-    @GetMapping("/{slug}/order/{orderId}")
+    @GetMapping("/{slug:[a-z0-9-]+}/order/{orderId}")
     public String orderStatus(
             @PathVariable String slug,
             @PathVariable Long orderId,
@@ -199,34 +144,37 @@ public class PageController {
 
     @GetMapping("/cart")
     public String legacyCart() {
-        return "redirect:/chaikhana/cart";
+        return "redirect:/";
     }
 
     @GetMapping("/item")
-    public String legacyItem(@RequestParam(required = false) Long id) {
-        if (id != null) {
-            return "redirect:/chaikhana/item?id=" + id;
-        }
-        return "redirect:/chaikhana/item";
+    public String legacyItem() {
+        return "redirect:/";
     }
 
     @GetMapping("/receipt")
     public String legacyReceipt() {
-        return "redirect:/chaikhana/receipt";
+        return "redirect:/";
     }
+
+    @GetMapping("/chaikhana-customer.css")
+    public String legacyChaikhanaCss() {
+        return "redirect:/default-customer.css";
+    }
+
     @GetMapping("/bazar-korgon-customer.css")
-    public String legacyCustomerCss() {
-        return "redirect:/chaikhana-customer.css";
+    public String legacyBazarCss() {
+        return "redirect:/default-customer.css";
     }
 
-    @GetMapping("/r/bazar-korgon")
-    public String legacyBazarKorgonShortcut() {
-        return "redirect:/chaikhana";
+    @GetMapping("/bazar-korgon")
+    public String legacyBazarKorgonMenu() {
+        return "redirect:/ordo-cafe";
     }
 
-    @GetMapping("/r/bazar-korgon/cart")
-    public String legacyBazarKorgonCartShortcut() {
-        return "redirect:/chaikhana/cart";
+    @GetMapping("/chaikhana")
+    public String legacyChaikhanaMenu() {
+        return "redirect:/ordo-cafe";
     }
 
     @GetMapping("/femili")
@@ -234,36 +182,15 @@ public class PageController {
         return "redirect:/family";
     }
 
-    /** Restaurant Panel — меню, ашкана, жөндөмөлөр (Panel 3) */
-    @GetMapping("/kitchen")
-    public String kitchen(
-            @RequestParam(required = false) String slug,
-            Model model
-    ) {
-        resolveKitchenPanel(slug, model);
-        return "kitchen";
-    }
-
     @GetMapping("/restaurant/{slug}")
-    public String restaurantPanel(@PathVariable String slug, Model model) {
-        resolveKitchenPanel(slug, model);
-        return "kitchen";
-    }
-
-    private void resolveKitchenPanel(String slug, Model model) {
-        if (slug == null || slug.isBlank()) {
-            return;
-        }
-        restaurantPageService.findBySlug(slug).ifPresentOrElse(
-                r -> restaurantPageService.enrichModel(model, r),
-                () -> restaurantPageService.enrichNotFound(model, slug)
-        );
+    public String legacyRestaurantPanel(@PathVariable String slug) {
+        return "redirect:/kitchen/" + restaurantPageService.normalizeSlug(slug);
     }
 
     @GetMapping("/admin")
     public String admin(@RequestParam(required = false) String slug) {
         if (slug != null && !slug.isBlank()) {
-            return "redirect:/kitchen?slug=" + restaurantPageService.normalizeSlug(slug);
+            return "redirect:/kitchen/" + restaurantPageService.normalizeSlug(slug);
         }
         return "redirect:/kitchen";
     }
@@ -271,7 +198,7 @@ public class PageController {
     @GetMapping("/admin-menu")
     public String adminMenu(@RequestParam(required = false) String slug) {
         if (slug != null && !slug.isBlank()) {
-            return "redirect:/kitchen?slug=" + restaurantPageService.normalizeSlug(slug) + "#menu";
+            return "redirect:/kitchen/" + restaurantPageService.normalizeSlug(slug) + "#menu";
         }
         return "redirect:/kitchen#menu";
     }
@@ -289,7 +216,7 @@ public class PageController {
     @GetMapping("/cafe")
     public String cafe(@RequestParam(required = false) String slug) {
         if (slug != null && !slug.isBlank()) {
-            return "redirect:/kitchen?slug=" + restaurantPageService.normalizeSlug(slug);
+            return "redirect:/kitchen/" + restaurantPageService.normalizeSlug(slug);
         }
         return "redirect:/kitchen";
     }
@@ -310,13 +237,20 @@ public class PageController {
             Model model
     ) {
         if (slug != null && !slug.isBlank()) {
-            if ("femili".equalsIgnoreCase(slug)) {
-                slug = "family";
-            }
             restaurantPageService.findActiveBySlug(slug)
                     .ifPresent(r -> restaurantPageService.enrichModel(model, r));
         }
         return "ratlion";
+    }
+
+    private void resolveKitchenPanel(String slug, Model model) {
+        if (slug == null || slug.isBlank()) {
+            return;
+        }
+        restaurantPageService.findBySlug(slug).ifPresentOrElse(
+                r -> restaurantPageService.enrichModel(model, r),
+                () -> restaurantPageService.enrichNotFound(model, slug)
+        );
     }
 
     private boolean isReservedSlug(String slug) {
@@ -326,6 +260,9 @@ public class PageController {
     private String renderRestaurantPage(String slug, Model model, String template) {
         if ("femili".equalsIgnoreCase(slug)) {
             return "redirect:/family";
+        }
+        if ("bazar-korgon".equalsIgnoreCase(slug) || "chaikhana".equalsIgnoreCase(slug)) {
+            return "redirect:/ordo-cafe";
         }
         Restaurant restaurant = restaurantPageService.findBySlug(slug).orElse(null);
         if (restaurant == null) {

@@ -1,4 +1,4 @@
-﻿# Render Blueprint — RATLION platform
+# Render Blueprint — RATLION platform
 databases:
   - name: ratlion-db
     plan: free

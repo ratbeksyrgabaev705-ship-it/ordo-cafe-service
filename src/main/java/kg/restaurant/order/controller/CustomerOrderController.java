@@ -460,17 +460,13 @@ public class CustomerOrderController {
         order.setDisplayOrderNumber(null);
         order.setCourierId(null);
         if (order.getRestaurantId() == null) {
-            order.setRestaurantId(
-                    restaurantRepository.findBySlug("chaikhana")
-                            .map(Restaurant::getId)
-                            .orElse(1L)
-            );
+            return;
         }
     }
 
     private String restaurantLabel(CustomerOrder order) {
         if (order.getRestaurantId() == null) {
-            return "Чайхана";
+            return "Ресторан";
         }
         return restaurantRepository.findById(order.getRestaurantId())
                 .map(Restaurant::getName)
@@ -510,11 +506,11 @@ public class CustomerOrderController {
 
     private String adminPathFor(CustomerOrder order) {
         if (order.getRestaurantId() == null) {
-            return "/admin";
+            return "/kitchen";
         }
         return restaurantRepository.findById(order.getRestaurantId())
-                .map(r -> "/admin?slug=" + r.getSlug())
-                .orElse("/admin");
+                .map(r -> "/kitchen/" + r.getSlug())
+                .orElse("/kitchen");
     }
 
     private void notifyCouriersPickup(CustomerOrder order) {

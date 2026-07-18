@@ -6,7 +6,7 @@
 
     <title th:text="${restaurantName}">Заказ</title>
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="stylesheet" th:href="${customerCss}" href="/chaikhana-customer.css">
+    <link rel="stylesheet" th:href="${customerCss}" href="/default-customer.css">
     <script th:inline="javascript">
         window.RESTAURANT = {
             id: /*[[${restaurantId}]]*/ null,
@@ -1148,7 +1148,7 @@
 
             formData.append(
                 "restaurantId",
-                localStorage.getItem("restaurantId") || "1"
+                localStorage.getItem("restaurantId") || (window.RESTAURANT && window.RESTAURANT.id) || ""
             );
 
             formData.append(

@@ -29,7 +29,7 @@
         return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
     }
     function customerUrl() {
-        return '/r/' + encodeURIComponent(scopeSlug || '');
+        return '/' + encodeURIComponent(scopeSlug || '');
     }
     function toast(msg) {
         const el = q('kToast');
@@ -42,6 +42,8 @@
     function getSlugFromUrl() {
         const params = new URLSearchParams(location.search);
         if (params.get('slug')) return params.get('slug');
+        const kitchenMatch = location.pathname.match(/^\/kitchen\/([^/?#]+)/i);
+        if (kitchenMatch) return decodeURIComponent(kitchenMatch[1]);
         const match = location.pathname.match(/^\/restaurant\/([^/?#]+)/i);
         return match ? decodeURIComponent(match[1]) : null;
     }
@@ -141,7 +143,7 @@
             const res = await fetch('/api/restaurants/public');
             const list = await res.json();
             q('kRestList').innerHTML = list.map(r =>
-                `<a class="kitchen-rest-link" href="/kitchen?slug=${encodeURIComponent(r.slug)}">${r.emoji || '🏪'} ${esc(r.name)}</a>`
+                `<a class="kitchen-rest-link" href="/kitchen/${encodeURIComponent(r.slug)}">${r.emoji || '🏪'} ${esc(r.name)}</a>`
             ).join('') || '<p style="color:#94a3b8">Ресторан жок</p>';
         } catch (e) {
             q('kRestList').innerHTML = '<p style="color:#94a3b8">Жүктөлбөдү</p>';

@@ -18,8 +18,8 @@ public class NotFoundRedirectAdvice {
         String path = request.getRequestURI();
         if (path != null && path.matches("^/restaurant/[^/]+$")) {
             String slug = path.substring(path.lastIndexOf('/') + 1);
-            return "redirect:/kitchen?slug=" + slug;
+            return "redirect:/kitchen/" + slug;
         }
-        return "redirect:/";
+        throw ex;
     }
 }
