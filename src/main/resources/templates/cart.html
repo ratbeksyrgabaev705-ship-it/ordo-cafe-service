@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="'Себет — ' + ${restaurantName}">Себет — ОРДО КАФЕ</title>
+    <title th:text="${'Себет — ' + restaurantName}">Себет — ОРДО КАФЕ</title>
     <link rel="icon" href="/logo.png" type="image/png">
     <link rel="stylesheet" href="/ordo-customer.css">
     <script th:inline="javascript">
@@ -244,7 +244,7 @@
 <body>
 <div class="page">
     <header class="header">
-        <button type="button" class="back-btn" th:onclick="|location.href='${restaurantBase}'|">←</button>
+        <button type="button" class="back-btn" onclick="location.href=rUrl('/')">←</button>
         <div id="headerTitle" class="header-title">Себет</div>
         <div class="header-cart-icon">
             🛒
@@ -257,7 +257,7 @@
             <div style="font-size:48px;">🛒</div>
             <div id="emptyTitle" style="font-weight:900;margin-top:8px;">Себет бош</div>
             <div id="emptyText" style="margin-top:8px;font-size:14px;">Менюдан тамак тандаңыз</div>
-            <button type="button" id="emptyMenuButton" th:onclick="|location.href='${restaurantBase}'|">Менюга кайтуу</button>
+            <button type="button" id="emptyMenuButton" onclick="location.href=rUrl('/')">Менюга кайтуу</button>
         </div>
 
         <div id="cartContent">
@@ -465,7 +465,7 @@
     function goToCheckout() {
         if (!cart.length) { alert(t("emptyAlert")); return; }
         localStorage.setItem("orderComment", orderComment.trim());
-        window.location.href = (window.restaurantBase || '/r/ordo') + '/receipt';
+        window.location.href = rUrl('/receipt');
     }
 
     function formatMoney(v) {
