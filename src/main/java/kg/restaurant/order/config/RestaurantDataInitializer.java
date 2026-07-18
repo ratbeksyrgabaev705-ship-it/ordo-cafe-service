@@ -52,8 +52,9 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         migrateFemiliToFamily();
         ensureRestaurantsActive();
         ensureFamilyRestaurant();
-        ensureOrdoRestaurant();
+        ensureBazarKorgonRestaurant();
         ensureAgaIniRestaurant();
+        deactivateCompetitorPlaceholders();
         syncCustomerUrls();
         backfillRestaurantIds();
         seedFamilyMenuIfEmpty();
@@ -136,33 +137,64 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         restaurantRepository.save(family);
     }
 
-    /** Ordo Cafe — улуттук тамактар */
-    private void ensureOrdoRestaurant() {
-        Restaurant ordo = restaurantRepository.findBySlug("ordo").orElse(null);
-        if (ordo == null) {
-            ordo = buildRestaurant(
-                    "ОРДО КАФЕ", "ordo", "🍽", "#c9a227", "ОД",
-                    "Улуттук тамактар жана кофе"
+    /** Базар-Коргон — негизги ресторан (мурунку Ordo) */
+    private void ensureBazarKorgonRestaurant() {
+        Restaurant bk = restaurantRepository.findBySlug("bazar-korgon").orElse(null);
+        Restaurant oldOrdo = restaurantRepository.findBySlug("ordo").orElse(null);
+
+        if (bk == null && oldOrdo != null) {
+            oldOrdo.setSlug("bazar-korgon");
+            bk = oldOrdo;
+        }
+        if (bk == null) {
+            bk = buildRestaurant(
+                    "БАЗАР-КОРГОН", "bazar-korgon", "🍽", "#c9a227", "БК",
+                    "Базар-Коргон шаары — тамак жеткирүү"
             );
-            ordo.setAddress("Базар-Коргон шаары");
-            restaurantRepository.save(ordo);
-            log.info("Created Ordo Cafe restaurant");
+            bk.setAddress("Базар-Коргон шаары");
+            restaurantRepository.save(bk);
+            log.info("Created Bazar-Korgon restaurant");
             return;
         }
-        ordo.setActive(true);
-        ordo.setAcceptingOrders(true);
-        ordo.setName("ОРДО КАФЕ");
-        ordo.setCustomerUrl("/r/ordo");
-        if (ordo.getAccentColor() == null || ordo.getAccentColor().isBlank()) {
-            ordo.setAccentColor("#c9a227");
+
+        bk.setActive(true);
+        bk.setAcceptingOrders(true);
+        bk.setName("БАЗАР-КОРГОН");
+        bk.setCustomerUrl("/r/bazar-korgon");
+        if (bk.getAccentColor() == null || bk.getAccentColor().isBlank()) {
+            bk.setAccentColor("#c9a227");
         }
-        if (ordo.getTagline() == null || ordo.getTagline().isBlank()) {
-            ordo.setTagline("Улуттук тамактар жана кофе");
+        if (bk.getTagline() == null || bk.getTagline().isBlank()) {
+            bk.setTagline("Базар-Коргон шаары — тамак жеткирүү");
         }
-        if (ordo.getAddress() == null || ordo.getAddress().isBlank()) {
-            ordo.setAddress("Базар-Коргон шаары");
+        if (bk.getAddress() == null || bk.getAddress().isBlank()) {
+            bk.setAddress("Базар-Коргон шаары");
         }
-        restaurantRepository.save(ordo);
+        restaurantRepository.save(bk);
+
+        if (oldOrdo != null && !oldOrdo.getId().equals(bk.getId())) {
+            oldOrdo.setActive(false);
+            restaurantRepository.save(oldOrdo);
+            log.info("Deactivated duplicate ordo restaurant record");
+        }
+    }
+
+    /** Мисал/конкурент аттары — кардарга көрсөтülбөйт */
+    private void deactivateCompetitorPlaceholders() {
+        for (String slug : List.of("burger-men", "zhorolor", "ordo")) {
+            restaurantRepository.findBySlug(slug).ifPresent(r -> {
+                if ("ordo".equals(slug) && restaurantRepository.findBySlug("bazar-korgon").isPresent()) {
+                    Restaurant bk = restaurantRepository.findBySlug("bazar-korgon").orElse(null);
+                    if (bk != null && !bk.getId().equals(r.getId())) {
+                        r.setActive(false);
+                        restaurantRepository.save(r);
+                    }
+                } else if (!"ordo".equals(slug)) {
+                    r.setActive(false);
+                    restaurantRepository.save(r);
+                }
+            });
+        }
     }
 
     /** Aga-Ini — улуттук аshкана (3-ресторан) */
@@ -251,17 +283,19 @@ public class RestaurantDataInitializer implements CommandLineRunner {
     }
 
     private void seedOrdoMenuIfEmpty() {
-        Restaurant ordo = restaurantRepository.findBySlug("ordo").orElse(null);
-        if (ordo == null) {
+        Restaurant bk = restaurantRepository.findBySlug("bazar-korgon")
+                .or(() -> restaurantRepository.findBySlug("ordo"))
+                .orElse(null);
+        if (bk == null) {
             return;
         }
 
-        long existing = menuItemRepository.findByRestaurantId(ordo.getId()).size();
+        long existing = menuItemRepository.findByRestaurantId(bk.getId()).size();
         if (existing > 0) {
             return;
         }
 
-        Long rid = ordo.getId();
+        Long rid = bk.getId();
         List<MenuItem> menu = List.of(
                 ordoItem(rid, "Уйгур лагман 0,7", "Уйгурский лагман 0,7", "Лагман", "Лагман",
                         "Колго чоюлган кесме, уй эти, жашылчалар", "Домашняя лапша с говядиной", 280.0,
@@ -308,7 +342,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         );
 
         menuItemRepository.saveAll(menu);
-        log.info("Seeded {} menu items for ОРДО КАФЕ (id={})", menu.size(), rid);
+        log.info("Seeded {} menu items for БАЗАР-КОРГОН (id={})", menu.size(), rid);
     }
 
     private MenuItem ordoItem(
@@ -675,11 +709,9 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         }
 
         List<Restaurant> defaults = List.of(
-                buildRestaurant("ОРДО КАФЕ", "ordo", "🍽", "#c9a227", "ОД", "Улуттук тамактар жана кофе"),
+                buildRestaurant("БАЗАР-КОРГОН", "bazar-korgon", "🍽", "#c9a227", "БК", "Базар-Коргон шаары — тамак жеткирүү"),
                 buildRestaurant("FAMILY_PARK", "family", "F", "#5C1A1A", "FP", "Даамдуу тамактар — үй-бүлөңүз үчүн"),
-                buildRestaurant("Aga-Ini", "aga-ini", "🥘", "#D4AF37", "AI", "Улуттук тамактар"),
-                buildRestaurant("Burger Men", "burger-men", "🍔", "#FF0000", "BM", "Бургерлер жана комбо"),
-                buildRestaurant("Zhorolor Samsa", "zhorolor", "🥟", "#2D6A4F", "ZS", "Самса жана выпечка")
+                buildRestaurant("Aga-Ini", "aga-ini", "AI", "#6B2737", "AI", "Улуттук тамактар — үйдөгү даам")
         );
 
         restaurantRepository.saveAll(defaults);
@@ -719,7 +751,8 @@ public class RestaurantDataInitializer implements CommandLineRunner {
     }
 
     private void backfillRestaurantIds() {
-        Restaurant defaultRestaurant = restaurantRepository.findBySlug("ordo")
+        Restaurant defaultRestaurant = restaurantRepository.findBySlug("bazar-korgon")
+                .or(() -> restaurantRepository.findBySlug("ordo"))
                 .orElse(restaurantRepository.findAll().stream().findFirst().orElse(null));
 
         if (defaultRestaurant == null) {

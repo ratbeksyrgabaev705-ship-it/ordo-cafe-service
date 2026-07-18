@@ -69,7 +69,7 @@ final class MenuContentGenerator {
             return "Тазa суусундуктар, свежo даярдалган негизги компоненттер, туз же кand.";
         }
         return "Свежo тандалган негизги продукттар, жашылчалар, эт, татымалдар, "
-                + "май, туз жана Ordo Cafe'нин атайын рецепти боюнча кошумча ингредиенттер.";
+                + "май, туз жана Bazar-Korgon'нин атайын рецепти боюнча кошумча ингредиенттер.";
     }
 
     private static String generateIngredientsRu(String name, String category) {
@@ -97,11 +97,11 @@ final class MenuContentGenerator {
             return "Свежие основные ингредиенты, чистая вода, сахар или соль по рецепту.";
         }
         return "Свежие основные продукты, овощи, мясо, специи, масло, соль "
-                + "и дополнительные ингредиенты по фирменному рецепту Ordo Cafe.";
+                + "и дополнительные ингредиенты по фирменному рецепту Bazar-Korgon.";
     }
 
     private static String generateDescriptionKg(String name, String category) {
-        return name + " — Ordo Cafe'нин " + category.toLowerCase(Locale.ROOT)
+        return name + " — Bazar-Korgon'нин " + category.toLowerCase(Locale.ROOT)
                 + " категориясындагы атайын тамак. Ар бир порция заказ берилгенде свежo даярдалат, "
                 + "эттин даамы, жашылчалардын жыты жана татымалдардын тереңдиги сезилет. "
                 + "Тамактын текстурасы жагымдуu, даамы тең салмактуu, тойгузуучu. "
@@ -110,7 +110,7 @@ final class MenuContentGenerator {
     }
 
     private static String generateDescriptionRu(String name, String category) {
-        return name + " — фирменное блюдо Ordo Cafe из категории «" + category + "». "
+        return name + " — фирменное блюдо Bazar-Korgon из категории «" + category + "». "
                 + "Каждая порция готовится свежей после заказа, раскрывая вкус мяса, "
                 + "аромат овощей и глубину специй. Текстура приятная, вкус сбалансированный, "
                 + "блюдо сытное. Наиболее выигрышно в горячем виде сразу после приготовления — "

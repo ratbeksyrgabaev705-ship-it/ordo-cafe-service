@@ -58,23 +58,46 @@ public class PageController {
         return renderRestaurantPage(slug, model, "receipt");
     }
 
-    /** Эски шилтемелер → Ordo */
+    /** Эски шилтемелер → Базар-Коргон */
     @GetMapping("/cart")
     public String legacyCart() {
-        return "redirect:/r/ordo/cart";
+        return "redirect:/r/bazar-korgon/cart";
     }
 
     @GetMapping("/item")
     public String legacyItem(@RequestParam(required = false) Long id) {
         if (id != null) {
-            return "redirect:/r/ordo/item?id=" + id;
+            return "redirect:/r/bazar-korgon/item?id=" + id;
         }
-        return "redirect:/r/ordo/item";
+        return "redirect:/r/bazar-korgon/item";
     }
 
     @GetMapping("/receipt")
     public String legacyReceipt() {
-        return "redirect:/r/ordo/receipt";
+        return "redirect:/r/bazar-korgon/receipt";
+    }
+
+    @GetMapping("/r/ordo")
+    public String legacyOrdoMenu() {
+        return "redirect:/r/bazar-korgon";
+    }
+
+    @GetMapping("/r/ordo/cart")
+    public String legacyOrdoCart() {
+        return "redirect:/r/bazar-korgon/cart";
+    }
+
+    @GetMapping("/r/ordo/item")
+    public String legacyOrdoItem(@RequestParam(required = false) Long id) {
+        if (id != null) {
+            return "redirect:/r/bazar-korgon/item?id=" + id;
+        }
+        return "redirect:/r/bazar-korgon/item";
+    }
+
+    @GetMapping("/r/ordo/receipt")
+    public String legacyOrdoReceipt() {
+        return "redirect:/r/bazar-korgon/receipt";
     }
 
     @GetMapping("/r/{slug}/order/{orderId}")

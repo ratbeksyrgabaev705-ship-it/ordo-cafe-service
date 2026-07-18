@@ -461,7 +461,7 @@ public class CustomerOrderController {
         order.setCourierId(null);
         if (order.getRestaurantId() == null) {
             order.setRestaurantId(
-                    restaurantRepository.findBySlug("ordo")
+                    restaurantRepository.findBySlug("bazar-korgon")
                             .map(Restaurant::getId)
                             .orElse(1L)
             );
@@ -470,7 +470,7 @@ public class CustomerOrderController {
 
     private String restaurantLabel(CustomerOrder order) {
         if (order.getRestaurantId() == null) {
-            return "ОРДО КАФЕ";
+            return "БАЗАР-КОРГОН";
         }
         return restaurantRepository.findById(order.getRestaurantId())
                 .map(Restaurant::getName)

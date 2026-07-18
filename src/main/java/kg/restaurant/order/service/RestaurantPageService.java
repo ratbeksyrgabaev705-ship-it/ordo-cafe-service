@@ -25,6 +25,9 @@ public class RestaurantPageService {
         if ("femili".equals(normalized)) {
             return "family";
         }
+        if ("ordo".equals(normalized)) {
+            return "bazar-korgon";
+        }
         return normalized;
     }
 

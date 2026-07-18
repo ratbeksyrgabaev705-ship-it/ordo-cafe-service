@@ -212,7 +212,7 @@ public class CourierController {
     private void notifyCourierActivated(Courier courier) {
         telegramService.sendToCourier(
                 courier.getTelegramChatId(),
-                "✅ Сиз Ordo Cafe курьери катары катталдыңыз!\n\n"
+                "✅ Сиз Базар-Коргон курьери катары катталдыңыз!\n\n"
                         + "Жеткирүү заказдары бул жерге келет.\n"
                         + "Веб-панель: /courier"
         );

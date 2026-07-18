@@ -6,7 +6,7 @@
 
     <title th:text="${'Заказ — ' + restaurantName}">Заказ маалыматтары — ОРДО КАФЕ</title>
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="stylesheet" href="/ordo-customer.css">
+    <link rel="stylesheet" th:href="${customerCss}" href="/ordo-customer.css">
     <script th:inline="javascript">
         window.RESTAURANT = {
             id: /*[[${restaurantId}]]*/ 1,
