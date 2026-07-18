@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FAMILY_PARK — Меню</title>
-    <link rel="stylesheet" href="/family-customer.css">
+    <title th:text="${restaurantName + ' — Меню'}">FAMILY_PARK — Меню</title>
+    <link rel="stylesheet" th:href="${customerCss}" href="/family-customer.css">
     <script th:inline="javascript">
         window.RESTAURANT = {
             id: /*[[${restaurantId}]]*/ 2,
@@ -19,20 +19,24 @@
 
 <div class="fam-page">
     <section class="fp-hero">
-        <div class="fp-hero-bg"></div>
+        <div class="fp-hero-bg" th:style="${restaurantBanner != null && !#strings.isEmpty(restaurantBanner)} ? |background-image:url('${restaurantBanner}')| : null"></div>
         <div class="fp-hero-overlay"></div>
         <div class="fp-hero-content">
             <div class="fp-hero-top">
                 <div class="fp-logo-circle">
-                    <span class="fp-logo-f">F</span>
-                    <span class="fp-logo-sub">FAMILY_PARK<br>РЕСТОРАНЫ</span>
+                    <span class="fp-logo-f" th:text="${restaurantEmoji != null && !#strings.isEmpty(restaurantEmoji) ? restaurantEmoji : #strings.substring(restaurantName, 0, 1)}">F</span>
+                    <span class="fp-logo-sub"><span th:text="${restaurantName}">FAMILY_PARK</span><br>РЕСТОРАНЫ</span>
                 </div>
                 <div class="fp-hero-text">
-                    <h1>Үй-бүлөңүз менен<br>жагымдуу эс алыңыз!</h1>
-                    <p>Даамдуу тамактар жана жагымдуу атмосфера сизди күтөт.</p>
+                    <h1 th:switch="${restaurantSlug}">
+                        <span th:case="'family'">Үй-бүлөңүз менен<br>жагымдуу эс алыңыз!</span>
+                        <span th:case="'aga-ini'">Улуттук даам —<br>үйдөгүдей!</span>
+                        <span th:case="*" th:text="${restaurantName}">Ресторан</span>
+                    </h1>
+                    <p th:text="${restaurantTagline != null && !#strings.isEmpty(restaurantTagline) ? restaurantTagline : 'Даамдуу тамактар жана жагымдуу атмосфера сизди күтөт.'}">Даамдуу тамактар жана жагымдуу атмосфера сизди күтөт.</p>
                     <div class="fp-hours">
                         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zm1 11h5v-2h-4V7h-2v6z"/></svg>
-                        <span>10:00 – 23:30</span>
+                        <span th:text="${restaurantAddress != null && !#strings.isEmpty(restaurantAddress) ? restaurantAddress + ' · 10:00 – 23:30' : '10:00 – 23:30'}">10:00 – 23:30</span>
                     </div>
                 </div>
             </div>
@@ -105,7 +109,8 @@
         'паста': '🍝', 'pasta': '🍝',
         'салат': '🥗', 'salad': '🥗',
         'суп': '🍲', 'шорпо': '🍲',
-        'улуттук': '🥘', 'напит': '🥤', 'суусундук': '🥤'
+        'улуттук': '🥘', 'напит': '🥤', 'суусундук': '🥤',
+        'лагман': '🍜', 'плов': '🍚', 'самса': '🥟', 'манты': '🥟', 'ичимдик': '🥤'
     };
 
     function formatMoney(v) { return Number(v || 0).toLocaleString('ru-RU', { maximumFractionDigits: 0 }); }

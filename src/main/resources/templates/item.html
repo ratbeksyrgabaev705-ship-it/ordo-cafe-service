@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${restaurantName}">ОРДО КАФЕ</title>
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="stylesheet" href="/ordo-customer.css">
+    <link rel="stylesheet" th:href="${customerCss}" href="/ordo-customer.css">
     <script th:inline="javascript">
         window.RESTAURANT = {
             id: /*[[${restaurantId}]]*/ 1,
@@ -708,7 +708,7 @@
         document.getElementById('mainContent').innerHTML =
             `<div class="error-box">${tr('notFound')}</div>`;
     } else {
-        fetch('/menu?restaurantId=' + encodeURIComponent(window.restaurantId || localStorage.getItem('restaurantId') || '1'))
+        fetch('/menu?restaurantId=' + encodeURIComponent(window.restaurantId))
             .then(r => {
                 if (!r.ok) throw new Error('menu');
                 return r.json();

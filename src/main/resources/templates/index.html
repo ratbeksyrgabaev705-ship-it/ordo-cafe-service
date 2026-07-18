@@ -6,7 +6,7 @@
 
     <title th:text="${restaurantName + ' — Меню'}">ОРДО КАФЕ</title>
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="stylesheet" href="/ordo-customer.css">
+    <link rel="stylesheet" th:href="${customerCss}" href="/ordo-customer.css">
     <script th:inline="javascript">
         window.RESTAURANT = {
             id: /*[[${restaurantId}]]*/ 1,
@@ -47,17 +47,17 @@
         <div class="hero-row">
 
             <div class="hero-logo">
-                <img src="/logo.png" alt="ОРДО КАФЕ">
+                <img src="/logo.png" th:alt="${restaurantName}" alt="ОРДО КАФЕ">
             </div>
 
             <div class="hero-info">
-                <h1>ОРДО КАФЕ</h1>
+                <h1 th:text="${restaurantName}">ОРДО КАФЕ</h1>
                 <div class="hero-meta">
                     <p>
                         <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                             <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z"/>
                         </svg>
-                        <span id="locationText">Базар-Коргон шаары</span>
+                        <span id="locationText" th:text="${restaurantAddress != null && !restaurantAddress.isEmpty() ? restaurantAddress : 'Бишкек'}">Бишкек</span>
                     </p>
                     <p>
                         <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -1021,7 +1021,7 @@
             .replaceAll('\n', ' ');
     }
 
-    fetch('/menu?restaurantId=' + encodeURIComponent(window.restaurantId || localStorage.getItem('restaurantId') || '1'))
+    fetch('/menu?restaurantId=' + encodeURIComponent(window.restaurantId))
         .then(response => {
             if (!response.ok) {
                 throw new Error(t('menuError'));

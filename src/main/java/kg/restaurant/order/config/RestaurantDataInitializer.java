@@ -53,10 +53,12 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         ensureRestaurantsActive();
         ensureFamilyRestaurant();
         ensureOrdoRestaurant();
+        ensureAgaIniRestaurant();
         syncCustomerUrls();
         backfillRestaurantIds();
         seedFamilyMenuIfEmpty();
         seedOrdoMenuIfEmpty();
+        seedAgaIniMenuIfEmpty();
         ensureFamilyPizzas();
         syncFamilyMenuImages();
         syncFamilyMenuDetails();
@@ -161,6 +163,91 @@ public class RestaurantDataInitializer implements CommandLineRunner {
             ordo.setAddress("Базар-Коргон шаары");
         }
         restaurantRepository.save(ordo);
+    }
+
+    /** Aga-Ini — улуттук аshкана (3-ресторан) */
+    private void ensureAgaIniRestaurant() {
+        Restaurant aga = restaurantRepository.findBySlug("aga-ini").orElse(null);
+        if (aga == null) {
+            aga = buildRestaurant(
+                    "Aga-Ini", "aga-ini", "AI", "#6B2737", "AI",
+                    "Улуттук тамактар — үйдөгү даам"
+            );
+            aga.setAddress("Бишкек");
+            aga.setBannerUrl("https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&q=80");
+            restaurantRepository.save(aga);
+            log.info("Created Aga-Ini restaurant");
+            return;
+        }
+        aga.setActive(true);
+        aga.setAcceptingOrders(true);
+        aga.setName("Aga-Ini");
+        aga.setCustomerUrl("/r/aga-ini");
+        if (aga.getAccentColor() == null || aga.getAccentColor().isBlank()) {
+            aga.setAccentColor("#6B2737");
+        }
+        if (aga.getTagline() == null || aga.getTagline().isBlank()) {
+            aga.setTagline("Улуттук тамактар — үйдөгү даам");
+        }
+        if (aga.getAddress() == null || aga.getAddress().isBlank()) {
+            aga.setAddress("Бишкек");
+        }
+        if (aga.getBannerUrl() == null || aga.getBannerUrl().isBlank()) {
+            aga.setBannerUrl("https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&q=80");
+        }
+        if (aga.getEmoji() == null || aga.getEmoji().isBlank() || "🥘".equals(aga.getEmoji())) {
+            aga.setEmoji("AI");
+        }
+        restaurantRepository.save(aga);
+    }
+
+    private void seedAgaIniMenuIfEmpty() {
+        Restaurant aga = restaurantRepository.findBySlug("aga-ini").orElse(null);
+        if (aga == null) {
+            return;
+        }
+        if (menuItemRepository.findByRestaurantId(aga.getId()).size() > 0) {
+            return;
+        }
+
+        Long rid = aga.getId();
+        List<MenuItem> menu = List.of(
+                ordoItem(rid, "Плов", "Плов", "Плов", "Плов",
+                        "Классикалык плов — күрүч, эт, сабиз", "Классический плов", 380.0,
+                        "https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=400&q=80"),
+                ordoItem(rid, "Лагман", "Лагман", "Лагман", "Лагман",
+                        "Уйгур лагманы", "Лагман с говядиной", 320.0,
+                        "https://images.unsplash.com/photo-1617093727343-374698b8141?w=400&q=80"),
+                ordoItem(rid, "Ганфан", "Ганфан", "Лагман", "Лагман",
+                        "Кесме + күрүч", "Лапша с рисом", 340.0,
+                        "https://images.unsplash.com/photo-1569718212165-3a8278d5f624?w=400&q=80"),
+                ordoItem(rid, "Шорпа", "Шорпа", "Шорпо", "Шорпо",
+                        "Эt suusu", "Мясной бульон", 300.0,
+                        "https://images.unsplash.com/photo-1547592166-23ac45744acd?w=400&q=80"),
+                ordoItem(rid, "Манты", "Манты", "Улуттук тамактар", "Национальные блюда",
+                        "Буу манты", "Манты на пару", 400.0,
+                        "https://images.unsplash.com/photo-1563245372-28a3042f9a9d?w=400&q=80"),
+                ordoItem(rid, "Куурдак", "Куурдак", "Улуттук тамактар", "Национальные блюда",
+                        "Куурулган эт", "Жареное мясо", 450.0,
+                        "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=80"),
+                ordoItem(rid, "Беш бармак", "Беш бармак", "Улуттук тамактар", "Национальные блюда",
+                        "Классикалык бesh бармak", "Классический беш бармак", 520.0,
+                        "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400&q=80"),
+                ordoItem(rid, "Эtти самса", "Самса с мясом", "Самса", "Самса",
+                        "Тандыр самса", "Самса с мясом", 90.0,
+                        "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&q=80"),
+                ordoItem(rid, "Салат", "Свежий салат", "Салат", "Салаты",
+                        "Жашыл салат", "Свежий салат", 140.0,
+                        "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&q=80"),
+                ordoItem(rid, "Жашыл чай", "Зелёный чай", "Ичимдиктер", "Напитки",
+                        "Ысыk чай", "Зелёный чай", 60.0,
+                        "https://images.unsplash.com/photo-1556679343-c7306c1976bc?w=400&q=80"),
+                ordoItem(rid, "Айран", "Айран", "Ичимдиктер", "Напитки",
+                        "Сveжo айран", "Свежий айран", 80.0,
+                        "https://images.unsplash.com/photo-1623065424889-aaaf9e2b7c4d?w=400&q=80")
+        );
+        menuItemRepository.saveAll(menu);
+        log.info("Seeded {} menu items for Aga-Ini (id={})", menu.size(), rid);
     }
 
     private void seedOrdoMenuIfEmpty() {

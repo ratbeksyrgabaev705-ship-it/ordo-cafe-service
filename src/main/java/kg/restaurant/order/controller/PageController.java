@@ -170,6 +170,11 @@ public class PageController {
         return "redirect:/r/family";
     }
 
+    @GetMapping("/aga-ini")
+    public String agaIniShortcut() {
+        return "redirect:/r/aga-ini";
+    }
+
     /** Ratlion Delivery Service — борбордук админ (Panel 2) */
     @GetMapping("/ratlion")
     public String ratlion() {

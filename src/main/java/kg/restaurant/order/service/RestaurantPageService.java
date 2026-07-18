@@ -54,6 +54,8 @@ public class RestaurantPageService {
         model.addAttribute("restaurantBanner", restaurant.getBannerUrl());
         model.addAttribute("restaurantBase", "/r/" + restaurant.getSlug());
         model.addAttribute("customerTheme", resolveCustomerTheme(restaurant.getSlug()));
+        model.addAttribute("customerCss", resolveCustomerCss(restaurant.getSlug()));
+        model.addAttribute("restaurantAddress", restaurant.getAddress() != null ? restaurant.getAddress() : "");
         model.addAttribute("restaurantNotFound", false);
     }
 
@@ -63,18 +65,39 @@ public class RestaurantPageService {
     }
 
     public boolean usesFamilyTheme(String slug) {
-        return "family".equals(normalizeSlug(slug));
+        return usesFamilyLayout(slug);
+    }
+
+    /** Family-layout кардар UI (hero, категорияlar, bottom nav) */
+    public boolean usesFamilyLayout(String slug) {
+        String s = normalizeSlug(slug);
+        return "family".equals(s) || "aga-ini".equals(s);
     }
 
     public String resolveCustomerTemplate(String slug, String defaultTemplate) {
-        if (usesFamilyTheme(slug)) {
+        if (usesFamilyLayout(slug)) {
             return "family-" + defaultTemplate;
         }
         return defaultTemplate;
     }
 
     private String resolveCustomerTheme(String slug) {
-        return usesFamilyTheme(slug) ? "family" : "ordo";
+        String s = normalizeSlug(slug);
+        if ("family".equals(s)) {
+            return "family";
+        }
+        if ("aga-ini".equals(s)) {
+            return "aga-ini";
+        }
+        return "ordo";
+    }
+
+    public String resolveCustomerCss(String slug) {
+        return switch (normalizeSlug(slug)) {
+            case "family" -> "/family-customer.css";
+            case "aga-ini" -> "/aga-ini-customer.css";
+            default -> "/ordo-customer.css";
+        };
     }
 
     public String publicPath(Restaurant restaurant) {

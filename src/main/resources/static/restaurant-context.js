@@ -1,7 +1,10 @@
 (function () {
     const r = window.RESTAURANT || {};
     const slug = r.slug || 'family';
-    const id = r.id || 1;
+    const id = r.id;
+    if (!id) {
+        console.error('RESTAURANT.id жок — меню туура жükтөлбөйт');
+    }
 
     window.restaurantBase = r.base || ('/r/' + slug);
     window.restaurantSlug = slug;
