@@ -1,3 +1,10 @@
+# Render Blueprint — PostgreSQL маалымат deploy'дан кийин сакталат
+databases:
+  - name: ordo-db
+    plan: free
+    databaseName: ordo_cafe
+    user: ordo_cafe
+
 services:
   - type: web
     name: ordo-cafe
@@ -7,6 +14,10 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ordo-db
+          property: connectionString
       - key: COURIER_DEFAULT_PHONE
         value: "0990912913"
       - key: COURIER_DEFAULT_NAME
