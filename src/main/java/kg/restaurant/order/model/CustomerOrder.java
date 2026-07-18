@@ -105,6 +105,15 @@ public class CustomerOrder {
     private LocalDateTime courierAt;
     private LocalDateTime deliveredAt;
 
+    /** Учурдагы OFFER кайсы курьерде */
+    private Long activeOfferCourierId;
+
+    /** Ротация индекси (айлануу) */
+    private Integer offerRotationIndex = 0;
+
+    /** OFFER мөөнөтү — кийин кийинки курьерге */
+    private LocalDateTime offerExpiresAt;
+
     /** Ratlion операторu (accept/reject) */
     private String operatorName;
 
@@ -467,6 +476,30 @@ public class CustomerOrder {
 
     public void setOperatorName(String operatorName) {
         this.operatorName = operatorName;
+    }
+
+    public Long getActiveOfferCourierId() {
+        return activeOfferCourierId;
+    }
+
+    public void setActiveOfferCourierId(Long activeOfferCourierId) {
+        this.activeOfferCourierId = activeOfferCourierId;
+    }
+
+    public Integer getOfferRotationIndex() {
+        return offerRotationIndex;
+    }
+
+    public void setOfferRotationIndex(Integer offerRotationIndex) {
+        this.offerRotationIndex = offerRotationIndex;
+    }
+
+    public LocalDateTime getOfferExpiresAt() {
+        return offerExpiresAt;
+    }
+
+    public void setOfferExpiresAt(LocalDateTime offerExpiresAt) {
+        this.offerExpiresAt = offerExpiresAt;
     }
 
 }

@@ -169,4 +169,17 @@ public interface CustomerOrderRepository
     List<CustomerOrder> findTop40ByOrderStatusAndCourierIdIsNotNullOrderByDeliveredAtDesc(
             String orderStatus
     );
+
+    List<CustomerOrder> findByOrderStatusAndCourierIdIsNullAndActiveOfferCourierIdIsNotNullAndOfferExpiresAtBefore(
+            String orderStatus,
+            LocalDateTime expiresBefore
+    );
+
+    long countByCourierIdAndOrderStatusIn(Long courierId, List<String> statuses);
+
+    boolean existsByCourierIdAndRestaurantIdAndOrderStatus(
+            Long courierId,
+            Long restaurantId,
+            String orderStatus
+    );
 }

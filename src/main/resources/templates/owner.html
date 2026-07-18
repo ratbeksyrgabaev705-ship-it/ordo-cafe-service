@@ -304,14 +304,11 @@
 
         if (response.ok) {
             const saved = await response.json();
-            const link = location.origin + '/courier?phone=' + encodeURIComponent(saved.phone || phone);
             document.getElementById('courierName').value = '';
             document.getElementById('courierChatId').value = '';
             document.getElementById('courierPhone').value = '';
             loadCouriers();
-            if (saved.phone) {
-                alert('Кошулду!\n\nКурьерге бул шилтemeni жибер:\n' + link);
-            }
+            alert('✅ ' + (saved.name || name) + ' катталды');
         } else {
             alert('Кошулбай калды — телефон кайталанган болушу мүмкүн');
         }

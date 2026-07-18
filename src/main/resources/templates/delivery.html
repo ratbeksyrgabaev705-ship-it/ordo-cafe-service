@@ -108,20 +108,17 @@
         </section>
 
         <section id="sec-couriers" class="delivery-section">
-            <div class="delivery-head"><h1>Курьерлер</h1><p>Жаңы курьер кош — шилтemeni жибер, өзү кирет</p></div>
+            <div class="delivery-head"><h1>Курьерлер</h1><p>Аты + телефон → катта</p></div>
             <div class="delivery-panel" style="margin-bottom:16px">
-                <p style="font-size:14px;line-height:1.7;color:#334155;margin-bottom:16px">
-                    <strong>3 кadam:</strong><br>
-                    1️⃣ Аты + телефон жаз → <strong>Кошуу</strong> бас<br>
-                    2️⃣ <strong>Шилтeme көчүр</strong> бас → WhatsApp'ка жибер<br>
-                    3️⃣ Курьер шилтemeni ачып «Кирүү» басат — бүттү
-                </p>
-                <label class="delivery-label">Жаңы курьер</label>
+                <label class="delivery-label">Курьер каттоо</label>
                 <div class="delivery-toolbar" style="margin-top:8px;flex-wrap:wrap">
                     <input id="dCourierName" class="delivery-input" type="text" placeholder="Аты (мисалы: Азамат)">
                     <input id="dCourierPhone" class="delivery-input" type="tel" placeholder="Телефон (0990123456)" inputmode="tel">
-                    <button type="button" class="delivery-btn delivery-btn-green" onclick="dAddCourier()">➕ Кошуу</button>
+                    <button type="button" class="delivery-btn delivery-btn-green" onclick="dAddCourier()">Каттоо</button>
                 </div>
+                <p style="font-size:13px;color:var(--d-muted);margin-top:12px;line-height:1.6">
+                    Курьер өзү да <strong>/courier</strong> сайтына кирип, аты + телефон менен аккаунт ача алат.
+                </p>
             </div>
             <div class="delivery-panel" style="margin-bottom:16px">
                 <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
@@ -144,13 +141,6 @@
                     <input id="dOperator" class="delivery-input" type="text" placeholder="Оператор">
                     <button type="button" class="delivery-btn delivery-btn-primary" onclick="dSaveOperator()">Сактоо</button>
                 </div>
-                <p style="margin-top:20px;font-size:13px;color:var(--d-muted);line-height:1.8">
-                    <strong style="color:#334155">Толук тест агымы:</strong><br>
-                    <a href="/r/family" target="_blank" style="color:var(--d-accent);font-weight:700">→ Family меню</a> (заказ)<br>
-                    <a href="/kitchen?slug=family" target="_blank" style="color:var(--d-accent);font-weight:700">→ Family ашкана</a> (даярдоо)<br>
-                    <a href="/courier?phone=0990912913" target="_blank" style="color:var(--d-accent);font-weight:700">→ Курьер панели</a> (жеткирүү)<br><br>
-                    Меню башкаруу — <strong>ресторан панели</strong> аркылуу гана.
-                </p>
             </div>
         </section>
 

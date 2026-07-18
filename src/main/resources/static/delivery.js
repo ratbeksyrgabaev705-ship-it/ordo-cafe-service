@@ -391,10 +391,53 @@
         alert('Сакталды');
     };
 
-    function courierLink(phone, name) {
-        return location.origin + '/courier?phone=' + encodeURIComponent(phone)
-            + (name ? '&name=' + encodeURIComponent(name) : '');
+    async function loadCouriers() {
+        const box = q('dCourierList');
+        if (!box) return;
+        try {
+            const list = await fetch('/api/couriers/active').then(r => r.json());
+            const phoneCouriers = list.filter(c => c.phone);
+            if (!phoneCouriers.length) {
+                box.innerHTML = '<div class="delivery-empty">Азырынча курьер жок</div>';
+                return;
+            }
+            box.innerHTML = phoneCouriers.map(c =>
+                `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f1f5f9;gap:12px">
+                    <div>
+                        <strong style="font-size:15px">${esc(c.name)}</strong>
+                        <div style="font-size:13px;color:var(--d-muted);margin-top:3px">📞 ${esc(c.phone)}</div>
+                    </div>
+                    <span style="font-size:12px;font-weight:700;color:#15803d;background:#dcfce7;padding:4px 10px;border-radius:999px">Катталган</span>
+                </div>`
+            ).join('');
+        } catch (e) {
+            box.innerHTML = '<div class="delivery-empty">Жүктөлбөдү</div>';
+        }
     }
+
+    window.dAddCourier = async function () {
+        const name = q('dCourierName').value.trim();
+        const phone = q('dCourierPhone').value.trim();
+        if (!name || !phone) {
+            alert('Аты жана телефонду жазыңыз');
+            return;
+        }
+        const res = await fetch('/api/couriers/register-phone', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, phone })
+        });
+        if (!res.ok) {
+            alert('Катталбай калды — бул телефон бар болушу мүмкүн');
+            return;
+        }
+        const saved = await res.json();
+        q('dCourierName').value = '';
+        q('dCourierPhone').value = '';
+        alert('✅ ' + saved.name + ' катталды');
+        loadCouriers();
+        loadCourierActivity();
+    };
 
     function courierActivityBadgeClass(status) {
         const map = {
@@ -547,69 +590,6 @@
             }
         }
     }
-
-    async function loadCouriers() {
-        const box = q('dCourierList');
-        if (!box) return;
-        try {
-            const list = await fetch('/api/couriers/active').then(r => r.json());
-            const phoneCouriers = list.filter(c => c.phone);
-            if (!phoneCouriers.length) {
-                box.innerHTML = '<div class="delivery-empty">Азырынча курьер жок — жогоруда кош</div>';
-                return;
-            }
-            box.innerHTML = phoneCouriers.map(c => {
-                const link = courierLink(c.phone, c.name);
-                return `<div class="delivery-panel" style="margin-bottom:10px;padding:14px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between">
-                    <div>
-                        <strong style="font-size:16px">${esc(c.name)}</strong>
-                        <div style="font-size:13px;color:var(--d-muted);margin-top:4px">📞 ${esc(c.phone)}</div>
-                        <div style="font-size:11px;color:var(--d-muted);margin-top:6px;word-break:break-all">${esc(link)}</div>
-                    </div>
-                    <div style="display:flex;gap:8px;flex-shrink:0">
-                        <button type="button" class="delivery-btn delivery-btn-primary delivery-btn-sm" onclick='dCopyCourierLink(${JSON.stringify(c.phone)}, ${JSON.stringify(c.name || "")})'>📋 Шилтeme</button>
-                        <a class="delivery-btn delivery-btn-outline delivery-btn-sm" href="${esc(link)}" target="_blank" rel="noopener" style="text-decoration:none;line-height:1.4">Ачуу</a>
-                    </div>
-                </div>`;
-            }).join('');
-        } catch (e) {
-            box.innerHTML = '<div class="delivery-empty">Жүктөлбөдү</div>';
-        }
-    }
-
-    window.dCopyCourierLink = function (phone, name) {
-        const link = courierLink(phone, name);
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(link).then(() => alert('Шилтeme көчүрүлдү!\n\nWhatsApp\'ка жибер:\n' + link));
-        } else {
-            prompt('Шилтemeni көчүр:', link);
-        }
-    };
-
-    window.dAddCourier = async function () {
-        const name = q('dCourierName').value.trim();
-        const phone = q('dCourierPhone').value.trim();
-        if (!name || !phone) {
-            alert('Аты жана телефонду жазыңыз');
-            return;
-        }
-        const res = await fetch('/api/couriers/register-phone', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name, phone })
-        });
-        if (!res.ok) {
-            alert('Кошулбай калды — телефон кайталанган болушу мүmкүн');
-            return;
-        }
-        const saved = await res.json();
-        q('dCourierName').value = '';
-        q('dCourierPhone').value = '';
-        const link = courierLink(saved.phone, saved.name);
-        alert('✅ ' + saved.name + ' кошулду!\n\nКурьерге жибер:\n' + link);
-        loadCouriers();
-        loadCourierActivity();
-    };
 
     window.dLoadCouriers = loadCouriers;
     window.dLoadCourierActivity = loadCourierActivity;

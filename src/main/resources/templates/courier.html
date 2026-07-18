@@ -47,6 +47,19 @@
             width: 100%; padding: 10px; border-radius: 10px; border: 1px solid var(--line);
             background: transparent; color: #fca5a5; font-weight: 700; cursor: pointer; font-family: inherit;
         }
+        .c-profile-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+        .c-profile-actions button, .c-profile-actions a {
+            flex: 1; padding: 10px 8px; border-radius: 10px; border: 1px solid var(--line);
+            background: var(--surface); color: var(--text); font-weight: 700; cursor: pointer;
+            font-family: inherit; font-size: 12px; text-align: center; text-decoration: none;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .c-profile-actions .c-wa-btn { background: #25d366; color: #fff; border-color: #25d366; }
+        .c-profile-link-box {
+            font-size: 11px; word-break: break-all; margin-bottom: 10px; padding: 10px;
+            background: var(--bg); border: 1px solid var(--line); border-radius: 10px; line-height: 1.5;
+            color: var(--green); user-select: all;
+        }
 
         .c-wrap { max-width: 520px; margin: 0 auto; padding: 16px; padding-bottom: 90px; }
 
@@ -168,19 +181,17 @@
     <div class="c-profile-menu c-hidden" id="profileMenu">
         <div class="c-profile-menu-name" id="profileName">—</div>
         <div class="c-profile-menu-phone" id="profilePhone">—</div>
-        <div class="c-profile-menu-phone" id="profileLink" style="font-size:11px;word-break:break-all;margin-bottom:10px"></div>
         <button type="button" onclick="courierLogout()">Чыгуу</button>
     </div>
 </header>
 
 <main class="c-wrap">
     <section id="loginBox" class="c-login">
-        <h2 style="font-size:15px;font-weight:800;margin-bottom:12px">📱 Кирүү</h2>
-        <p class="c-login-note">Телефонуң менен бир жолу кир — кийин <strong>автоматтык</strong> сакталат.</p>
-        <div id="savedPhoneHint" class="c-login-note c-hidden" style="color:var(--green);margin-bottom:12px"></div>
+        <h2 style="font-size:15px;font-weight:800;margin-bottom:12px">🛵 Курьер</h2>
+        <p class="c-login-note">Атыңыз жана телефонуңду жаз — аккаунт ачылат.</p>
         <div class="c-field" style="margin-top:14px">
             <label>Атыңыз</label>
-            <input id="loginName" class="c-input" type="text" placeholder="Мисалы: Сыргый">
+            <input id="loginName" class="c-input" type="text" placeholder="Мисалы: Ратбек">
         </div>
         <div class="c-field">
             <label>Телефон</label>
@@ -352,13 +363,24 @@
         return map[status] || map.COOKING;
     }
 
+    function offerSecondsLeft(o) {
+        if (!o.offerExpiresAt) return null;
+        const sec = Math.max(0, Math.ceil((new Date(o.offerExpiresAt).getTime() - Date.now()) / 1000));
+        return sec;
+    }
+
     function offerCard(o) {
         const t = o.cookingStartedAt || o.createdAt;
+        const sec = offerSecondsLeft(o);
+        const timerHtml = sec != null
+            ? `<div style="font-size:12px;color:var(--gold);font-weight:700;margin-top:6px">⏱ ${sec} сек калды</div>`
+            : '';
         return `<article class="c-card c-card-offer">
             <div class="c-card-top">${statusBadge(null, true)}<span class="c-time-ago">${timeAgo(t)}</span></div>
             <div class="c-card-body">
                 <div class="c-card-left">
                     <div class="c-order-num">${esc(o.displayOrderNumber || '#' + o.id)}</div>
+                    ${timerHtml}
                     <div class="c-info-row"><span>📍</span><span>${esc(o.address || '—')}</span></div>
                     <div class="c-info-row"><span>👤</span><span>${esc(o.customerName)}</span></div>
                     ${o.phone ? `<div class="c-info-row"><span>📞</span><a href="tel:${esc(o.phone)}" style="color:var(--green);text-decoration:none">${esc(o.phone)}</a></div>` : ''}
@@ -499,23 +521,6 @@
             session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
         } catch (e) { session = null; }
 
-        const params = new URLSearchParams(location.search);
-        const urlPhone = params.get('phone') || '';
-        const urlName = params.get('name') || '';
-        const phone = urlPhone || (session && session.phone) || localStorage.getItem('courierPhone') || '';
-        const name = urlName || (session && session.name) || localStorage.getItem('courierName') || '';
-
-        if (phone) document.getElementById('loginPhone').value = phone;
-        if (name) document.getElementById('loginName').value = name;
-
-        if (session && session.id && session.phone && !urlPhone) {
-            const hint = document.getElementById('savedPhoneHint');
-            hint.classList.remove('c-hidden');
-            hint.textContent = '✅ Сакталган аккаунт: ' + session.phone + ' — кирүүдө...';
-        }
-
-        if (!phone) return;
-
         if (session && session.id) {
             try {
                 const res = await fetch('/api/couriers/' + session.id);
@@ -524,15 +529,13 @@
                     return;
                 }
             } catch (e) { /* fallback login */ }
-        }
-
-        const result = await loginWithPhone(phone, name || undefined);
-        if (result.ok) {
-            showApp(result.courier);
-        } else if (result.needName && !name) {
-            const hint = document.getElementById('savedPhoneHint');
-            hint.classList.remove('c-hidden');
-            hint.textContent = '📱 Жаңы номер — атыңызды жазыңыз';
+            if (session.phone) {
+                const result = await loginWithPhone(session.phone, session.name);
+                if (result.ok) {
+                    showApp(result.courier);
+                    return;
+                }
+            }
         }
     }
 
@@ -548,10 +551,6 @@
         document.getElementById('avatarBtn').textContent = avatarName.charAt(0).toUpperCase();
         document.getElementById('profileName').textContent = courier.name || 'Курьер';
         document.getElementById('profilePhone').textContent = '📞 ' + (courier.phone || '—');
-        if (courier.phone) {
-            const link = location.origin + '/courier?phone=' + encodeURIComponent(courier.phone);
-            document.getElementById('profileLink').innerHTML = '🔗 Жеке шилтeme:<br><a href="' + link + '" style="color:var(--green)">' + link + '</a>';
-        }
         document.getElementById('headerSub').textContent = courier.name || 'Ratlion';
         showInAppHint();
         refreshAll();
@@ -562,20 +561,20 @@
         const phone = document.getElementById('loginPhone').value.trim();
         const errEl = document.getElementById('loginError');
         errEl.classList.add('c-hidden');
+        if (!name) {
+            errEl.textContent = 'Атыңызды жазыңыз';
+            errEl.classList.remove('c-hidden');
+            return;
+        }
         if (!phone) {
             errEl.textContent = 'Телефонду жазыңыз';
             errEl.classList.remove('c-hidden');
             return;
         }
         try {
-            const result = await loginWithPhone(phone, name || undefined);
+            const result = await loginWithPhone(phone, name);
             if (result.ok) {
                 showApp(result.courier);
-                return;
-            }
-            if (result.needName) {
-                errEl.textContent = result.message || 'Жаңы аккаунт үчүн атыңызды жазыңыз';
-                errEl.classList.remove('c-hidden');
                 return;
             }
             errEl.textContent = result.message || 'Кирүү ишке ашкан жок';
@@ -589,7 +588,8 @@
     function courierLogout() {
         clearSession();
         document.getElementById('profileMenu').classList.add('c-hidden');
-        document.getElementById('savedPhoneHint').classList.add('c-hidden');
+        document.getElementById('loginName').value = '';
+        document.getElementById('loginPhone').value = '';
         showLogin();
     }
 
@@ -629,7 +629,7 @@
             if (pool.length) html += pool.map(o => orderCard(o, 'pool')).join('');
 
             document.getElementById('activeBox').innerHTML = html
-                || '<div class="c-empty">📭 Заказ жок<br><small>Ашкана «Даярдоону баштоо» басса, «Кабыл алам» чыгат</small></div>';
+                || '<div class="c-empty">📭 Заказ жок<br><small>Сунуш келсе бул жерде көрүнөт (20 сек)</small></div>';
         } catch (e) {
             document.getElementById('activeBox').innerHTML = '<div class="c-empty">Жүктөлбөдү</div>';
         }

@@ -7,6 +7,7 @@ import kg.restaurant.order.repository.CourierRepository;
 import kg.restaurant.order.repository.CustomerOrderRepository;
 import kg.restaurant.order.repository.RestaurantRepository;
 import kg.restaurant.order.service.CourierNotificationService;
+import kg.restaurant.order.service.CourierOfferRotationService;
 import kg.restaurant.order.service.ReceiptStorageService;
 import kg.restaurant.order.service.TelegramService;
 import org.springframework.http.MediaType;
@@ -17,10 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @RestController
 @RequestMapping("/orders")
@@ -44,6 +43,7 @@ public class CustomerOrderController {
     private final ReceiptStorageService receiptStorageService;
     private final TelegramService telegramService;
     private final CourierNotificationService courierNotificationService;
+    private final CourierOfferRotationService courierOfferRotationService;
 
     public CustomerOrderController(
             CustomerOrderRepository repo,
@@ -52,7 +52,8 @@ public class CustomerOrderController {
             RestaurantRepository restaurantRepository,
             ReceiptStorageService receiptStorageService,
             TelegramService telegramService,
-            CourierNotificationService courierNotificationService
+            CourierNotificationService courierNotificationService,
+            CourierOfferRotationService courierOfferRotationService
     ) {
         this.repo = repo;
         this.courierRepository = courierRepository;
@@ -61,6 +62,7 @@ public class CustomerOrderController {
         this.receiptStorageService = receiptStorageService;
         this.telegramService = telegramService;
         this.courierNotificationService = courierNotificationService;
+        this.courierOfferRotationService = courierOfferRotationService;
     }
 
     @GetMapping
@@ -121,12 +123,12 @@ public class CustomerOrderController {
     /** Жаңы суроолор — ашкана даярдоону баштаган, курьер кабыл алган жок */
     @GetMapping("/courier/offers")
     public List<CustomerOrder> getCourierOffers(@RequestParam(required = false) Long courierId) {
-        List<CustomerOrder> offers = repo.findByOrderStatusAndCourierIdIsNullOrderByCookingStartedAtDesc("COOKING");
         if (courierId == null) {
-            return offers;
+            return List.of();
         }
-        Set<Long> declined = new HashSet<>(notificationRepository.findDeclinedOfferOrderIds(courierId));
-        return offers.stream().filter(o -> !declined.contains(o.getId())).toList();
+        return repo.findByOrderStatusAndCourierIdIsNullOrderByCookingStartedAtDesc("COOKING").stream()
+                .filter(o -> courierId.equals(o.getActiveOfferCourierId()))
+                .toList();
     }
 
     /** Курьердин жеткирген тарыхы */
@@ -179,7 +181,11 @@ public class CustomerOrderController {
         if (order.getCourierId() != null && !order.getCourierId().equals(courierId)) {
             return ResponseEntity.status(409).build();
         }
+        if (order.getActiveOfferCourierId() != null && !order.getActiveOfferCourierId().equals(courierId)) {
+            return ResponseEntity.status(409).build();
+        }
         order.setCourierId(courierId);
+        courierOfferRotationService.stopRotation(order);
         CustomerOrder saved = repo.save(order);
         courierNotificationService.dismissOffersForOrder(id);
         courierRepository.findById(courierId).ifPresent(c ->
@@ -194,7 +200,15 @@ public class CustomerOrderController {
             @PathVariable Long id,
             @RequestParam Long courierId
     ) {
+        CustomerOrder order = repo.findById(id).orElse(null);
+        if (order == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if (!courierId.equals(order.getActiveOfferCourierId())) {
+            return ResponseEntity.status(409).build();
+        }
         courierNotificationService.declineOffer(id, courierId);
+        courierOfferRotationService.rotateToNext(id);
         return ResponseEntity.ok().build();
     }
 
@@ -554,7 +568,7 @@ public class CustomerOrderController {
         CustomerOrder saved = repo.save(order);
 
         if ("COOKING".equals(status)) {
-            courierNotificationService.notifyCourierOffer(saved);
+            courierOfferRotationService.startRotation(saved);
         } else if ("READY".equals(status)) {
             courierNotificationService.notifyOrderReady(saved);
         } else if (notifyCouriers && "GIVEN_TO_COURIER".equals(status)) {

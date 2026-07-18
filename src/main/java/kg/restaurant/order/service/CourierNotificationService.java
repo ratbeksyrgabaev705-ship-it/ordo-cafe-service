@@ -36,7 +36,39 @@ public class CourierNotificationService {
         this.telegramService = telegramService;
     }
 
-    /** Ашкана «Даярдоону баштоо» басканда — бардык курьерлерге суроо */
+    /** Ашкана «Даярдоону баштоо» — бир курьерге OFFER (ротация CourierOfferRotationService) */
+    public void sendOfferToCourier(CustomerOrder order, Courier courier, int secondsLeft) {
+        String rest = restaurantName(order);
+        String num = orderNumber(order);
+        String text = "🔔 " + rest + " — ЖАНЫ ЗАКАЗ\n\n"
+                + "🏷 " + num + "\n"
+                + "📍 " + safe(order.getAddress()) + "\n"
+                + "💰 " + formatAmount(order.getTotalPrice()) + " сом\n\n"
+                + "⏱ " + secondsLeft + " сек ичинде жооп бер\n\n"
+                + "Жеткирүүгө даярсызбы?";
+        saveInApp(courier.getId(), order, "OFFER", text);
+        sendExternal(courier, text);
+    }
+
+    public String restaurantNameFor(CustomerOrder order) {
+        return restaurantName(order);
+    }
+
+    public String orderNumberFor(CustomerOrder order) {
+        return orderNumber(order);
+    }
+
+    @Transactional
+    public void dismissOfferForCourier(Long orderId, Long courierId) {
+        notificationRepository.findByOrderIdAndCourierIdAndTypeAndReadFlagFalse(orderId, courierId, "OFFER")
+                .forEach(n -> {
+                    n.setReadFlag(true);
+                    notificationRepository.save(n);
+                });
+    }
+
+    /** @deprecated ротация аркылуу — CourierOfferRotationService колдон */
+    @Deprecated
     public void notifyCourierOffer(CustomerOrder order) {
         String rest = restaurantName(order);
         String num = orderNumber(order);
