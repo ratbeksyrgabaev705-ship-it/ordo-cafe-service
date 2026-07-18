@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="ky">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Курьер — Ratlion</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --c-bg: #0f1419; --c-card: #fff; --c-accent: #16a34a; --c-accent-dark: #15803d;
+            --c-muted: #64748b; --c-line: #e2e8f0; --c-gold: #a8861e;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Inter, system-ui, sans-serif; background: var(--c-bg); min-height: 100vh; color: #0f172a; }
+        .c-header { background: linear-gradient(135deg, #1a2332, #0f1419); color: #fff; padding: 18px 16px; border-bottom: 1px solid #334155; }
+        .c-header h1 { font-size: 20px; font-weight: 800; }
+        .c-header p { font-size: 12px; color: #94a3b8; margin-top: 4px; }
+        .c-wrap { max-width: 520px; margin: 0 auto; padding: 16px; padding-bottom: 80px; }
+        .c-login, .c-profile { background: var(--c-card); border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .c-field { margin-bottom: 12px; }
+        .c-field label { display: block; font-size: 11px; font-weight: 700; color: var(--c-muted); margin-bottom: 6px; text-transform: uppercase; }
+        .c-input { width: 100%; padding: 14px; border: 1px solid var(--c-line); border-radius: 12px; font-size: 16px; font-family: inherit; }
+        .c-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; font-size: 15px; font-weight: 800; cursor: pointer; font-family: inherit; }
+        .c-btn-primary { background: var(--c-accent); color: #fff; }
+        .c-btn-outline { background: transparent; border: 1px solid var(--c-line); color: var(--c-muted); margin-top: 8px; }
+        .c-btn-take { background: #2563eb; color: #fff; margin-bottom: 8px; }
+        .c-profile-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+        .c-profile-name { font-size: 18px; font-weight: 800; color: var(--c-accent-dark); }
+        .c-profile-phone { font-size: 13px; color: var(--c-muted); margin-top: 4px; }
+        .c-badge { display: inline-block; padding: 4px 10px; border-radius: 999px; background: #dcfce7; color: #15803d; font-size: 11px; font-weight: 700; }
+        .c-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .c-tab {
+            flex: 1; padding: 12px 8px; border: 1px solid #334155; border-radius: 12px;
+            background: rgba(255,255,255,0.05); color: #94a3b8; font-size: 13px; font-weight: 700;
+            cursor: pointer; text-align: center;
+        }
+        .c-tab.active { background: var(--c-accent); border-color: var(--c-accent); color: #fff; }
+        .c-tab-count { display: inline-block; min-width: 20px; padding: 2px 6px; border-radius: 999px; background: rgba(0,0,0,0.15); font-size: 11px; margin-left: 4px; }
+        .c-section-title { font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin: 16px 0 10px; }
+        .c-order { background: var(--c-card); border-radius: 16px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.12); animation: cSlide 0.3s ease; }
+        .c-order-pool { border: 2px dashed #93c5fd; background: #f8fafc; }
+        .c-order-history { opacity: 0.92; }
+        @keyframes cSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .c-order-num { font-size: 24px; font-weight: 900; color: var(--c-gold); margin-bottom: 8px; }
+        .c-order-meta { font-size: 14px; line-height: 1.6; color: #334155; margin-bottom: 10px; }
+        .c-order-items { background: #f8fafc; border-radius: 10px; padding: 12px; font-size: 14px; line-height: 1.5; margin-bottom: 12px; }
+        .c-address {
+            display: block; width: 100%; text-align: left; border: 2px solid #86efac;
+            background: linear-gradient(135deg, #ecfdf5, #f0fdf4); border-radius: 14px;
+            padding: 14px 16px; margin-bottom: 12px; cursor: pointer;
+        }
+        .c-address-label { display: block; font-size: 11px; font-weight: 800; color: var(--c-accent-dark); text-transform: uppercase; margin-bottom: 6px; }
+        .c-address-text { display: block; font-size: 16px; font-weight: 800; color: #0f172a; line-height: 1.45; margin-bottom: 4px; }
+        .c-address-hint { font-size: 12px; font-weight: 700; color: var(--c-accent); }
+        .c-call { display: block; text-align: center; padding: 12px; border-radius: 12px; background: var(--c-gold); color: #fff; text-decoration: none; font-weight: 800; margin-bottom: 8px; }
+        .c-deliver { width: 100%; padding: 14px; border: none; border-radius: 12px; background: var(--c-accent); color: #fff; font-weight: 800; font-size: 15px; cursor: pointer; }
+        .c-pickup { width: 100%; padding: 14px; border: none; border-radius: 12px; background: #2563eb; color: #fff; font-weight: 800; font-size: 15px; cursor: pointer; margin-bottom: 8px; }
+        .c-empty { text-align: center; padding: 40px 16px; color: #94a3b8; font-size: 14px; line-height: 1.6; }
+        .c-fab { position: fixed; bottom: 20px; right: 20px; width: 52px; height: 52px; border: none; border-radius: 50%; background: var(--c-accent); color: #fff; font-size: 20px; cursor: pointer; box-shadow: 0 4px 16px rgba(22,163,74,0.4); }
+        .c-error { color: #dc2626; font-size: 13px; margin-top: 8px; }
+        .c-hidden { display: none !important; }
+        .c-panel { display: none; }
+        .c-panel.active { display: block; }
+        .c-login-note { font-size: 12px; color: var(--c-muted); margin-top: 12px; line-height: 1.5; }
+        .c-notify-wrap { margin-bottom: 14px; }
+        .c-notify {
+            background: var(--c-card); border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
+            border-left: 4px solid var(--c-accent); box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            white-space: pre-line; font-size: 13px; line-height: 1.55; color: #334155;
+        }
+        .c-notify-COOKING { border-left-color: #2563eb; background: #eff6ff; }
+        .c-notify-WAITING { border-left-color: #2563eb; background: #eff6ff; }
+        .c-notify-READY { border-left-color: #ca8a04; background: #fefce8; }
+        .c-notify-OFFER { border-left-color: #7c3aed; background: #f5f3ff; }
+        .c-notify-PICKUP { border-left-color: #16a34a; background: #ecfdf5; animation: cPulse 1s ease 2; }
+        .c-order-offer { border: 3px solid #7c3aed; background: linear-gradient(135deg, #faf5ff, #fff); }
+        .c-offer-title { font-size: 15px; font-weight: 900; color: #6d28d9; margin-bottom: 10px; }
+        .c-offer-actions { display: flex; gap: 10px; margin-top: 14px; }
+        .c-offer-actions button { flex: 1; padding: 14px; border: none; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; }
+        .c-btn-accept { background: var(--c-accent); color: #fff; }
+        .c-btn-decline { background: #f1f5f9; color: #64748b; }
+        .c-status-wait { background: #dbeafe; color: #1d4ed8; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+        .c-status-ready { background: #fef9c3; color: #a16207; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+        .c-status-pickup { background: #dcfce7; color: #15803d; padding: 8px 12px; border-radius: 10px; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+        @keyframes cPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.3); } 50% { box-shadow: 0 0 0 8px rgba(22,163,74,0); } }
+        .c-notify-time { font-size: 11px; color: var(--c-muted); margin-top: 8px; }
+        .c-toast {
+            position: fixed; top: 16px; left: 16px; right: 16px; max-width: 488px; margin: 0 auto;
+            background: #1e293b; color: #fff; padding: 14px 16px; border-radius: 14px; z-index: 100;
+            font-size: 13px; line-height: 1.5; box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+            animation: cSlide 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+
+<header class="c-header">
+    <h1>🛵 Курьер панели</h1>
+    <p id="headerSub">Ratlion — жеке аккаунт</p>
+</header>
+
+<main class="c-wrap">
+    <section id="loginBox" class="c-login">
+        <h2 style="font-size:15px;font-weight:800;margin-bottom:12px">📱 Кирүү</h2>
+        <p class="c-login-note">Ар бир курьер өз телефону менен кирип, <strong>өз заказдарын</strong> гана көрөт.</p>
+        <div class="c-field" style="margin-top:14px">
+            <label>Атыңыз</label>
+            <input id="loginName" class="c-input" type="text" placeholder="Мисалы: Сыргый">
+        </div>
+        <div class="c-field">
+            <label>Телефон (логин)</label>
+            <input id="loginPhone" class="c-input" type="tel" placeholder="0990912913" inputmode="tel">
+        </div>
+        <button type="button" class="c-btn c-btn-primary" onclick="courierLogin()">Кирүү</button>
+        <p id="loginError" class="c-error c-hidden"></p>
+    </section>
+
+    <section id="appBox" class="c-hidden">
+        <div class="c-profile" style="margin-bottom:12px;padding:14px 16px">
+            <div class="c-profile-row">
+                <div>
+                    <div class="c-profile-name" id="profileName">—</div>
+                    <div class="c-profile-phone" id="profilePhone">—</div>
+                </div>
+                <button type="button" class="c-btn c-btn-outline" style="width:auto;margin:0;padding:8px 12px;font-size:12px" onclick="courierLogout()">Чыгуу</button>
+            </div>
+        </div>
+
+        <div id="alertBox" class="c-notify-wrap c-hidden"></div>
+
+        <div class="c-tabs">
+            <button type="button" class="c-tab active" id="tabActive" onclick="switchTab('active')">📦 Активдүү <span id="badgeActive" class="c-tab-count">0</span></button>
+            <button type="button" class="c-tab" id="tabHistory" onclick="switchTab('history')">📜 Тарых <span id="badgeHistory" class="c-tab-count">0</span></button>
+        </div>
+
+        <div id="panelActive" class="c-panel active">
+            <div id="poolBox"></div>
+            <div id="activeBox"></div>
+        </div>
+        <div id="panelHistory" class="c-panel">
+            <div id="historyBox"></div>
+        </div>
+    </section>
+</main>
+
+<button class="c-fab c-hidden" id="refreshFab" onclick="refreshAll()" title="Жаңыртуу">🔄</button>
+<div id="toastBox" class="c-hidden"></div>
+
+<script>
+    let currentCourier = null;
+    let currentTab = 'active';
+    let lastNotifyCount = 0;
+    let actionBusy = false;
+
+    async function runAction(fn) {
+        if (actionBusy) return;
+        actionBusy = true;
+        try {
+            await fn();
+        } finally {
+            actionBusy = false;
+        }
+    }
+
+    function esc(v) {
+        return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+    function money(v) {
+        return Number(v || 0).toLocaleString('ky-KG', { maximumFractionDigits: 0 });
+    }
+    function fmtTime(iso) {
+        if (!iso) return '—';
+        return new Date(iso).toLocaleString('ky-KG', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function normalizeAddress(address) {
+        const a = String(address || '').trim();
+        if (!a) return '';
+        if (/бишкек|bishkek/i.test(a)) return a;
+        return a + ', Бишкек';
+    }
+    function build2gisWebRoute(address) {
+        return 'https://2gis.kg/bishkek/directions/tab/car/to/' + encodeURIComponent(normalizeAddress(address));
+    }
+    function build2gisAppRoute(address) {
+        const q = encodeURIComponent(normalizeAddress(address));
+        return 'dgis://2gis.ru/routeSearch/rsType/car/to/%E2%95%8E' + q + '%E2%95%8E';
+    }
+    window.open2gis = function (address) {
+        if (!address) return;
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile) {
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = build2gisAppRoute(address);
+            document.body.appendChild(iframe);
+            setTimeout(function () {
+                if (iframe.parentNode) iframe.parentNode.removeChild(iframe);
+                window.location.href = build2gisWebRoute(address);
+            }, 600);
+        } else {
+            window.open(build2gisWebRoute(address), '_blank', 'noopener');
+        }
+    };
+
+    function addressButton(o) {
+        const addr = o.address || '';
+        if (!addr) return '<div class="c-order-meta">📍 Дарек жок</div>';
+        return `<button type="button" class="c-address" onclick="open2gis(${JSON.stringify(addr)})">
+            <span class="c-address-label">📍 Дарек — 2GIS</span>
+            <span class="c-address-text">${esc(addr)}</span>
+            <span class="c-address-hint">🗺 Маршрут көрсөтүү</span>
+        </button>`;
+    }
+
+    function offerCard(o) {
+        return `<article class="c-order c-order-offer">
+            <div class="c-offer-title">🔔 ЖАНЫ ЗАКАЗ — Кабыл аласызбы?</div>
+            <div class="c-order-num">${esc(o.displayOrderNumber || '#' + o.id)}</div>
+            ${addressButton(o)}
+            <div class="c-order-meta">👤 ${esc(o.customerName)} · 💰 ${money(o.totalPrice)} сом</div>
+            <div class="c-order-items">${esc(o.itemName)}</div>
+            <div class="c-offer-actions">
+                <button type="button" class="c-btn-accept" onclick="acceptOffer(${o.id})">✅ Кабыл алуу</button>
+                <button type="button" class="c-btn-decline" onclick="declineOffer(${o.id})">❌ Жок</button>
+            </div>
+        </article>`;
+    }
+
+    function orderStatusBanner(o) {
+        if (o.orderStatus === 'COOKING') {
+            return '<div class="c-status-wait">⏳ Даярдап жатат — даяр болгончо күтө тур</div>';
+        }
+        if (o.orderStatus === 'READY') {
+            return '<div class="c-status-ready">✅ Заказ даяр! Ресторанга барып алып кет</div>';
+        }
+        if (o.orderStatus === 'GIVEN_TO_COURIER') {
+            return '<div class="c-status-pickup">🛵 Кардарга жеткир — дарек төмөндө</div>';
+        }
+        return '';
+    }
+
+    function orderCard(o, mode) {
+        const isPool = mode === 'pool';
+        const isHistory = mode === 'history';
+        const cls = isPool ? 'c-order c-order-pool' : (isHistory ? 'c-order c-order-history' : 'c-order');
+        let actions = '';
+        if (isPool) {
+            actions = `<button type="button" class="c-btn c-btn-take" onclick="takeOrder(${o.id})">✋ Заказды алуу</button>`;
+        } else if (!isHistory) {
+            const phoneLink = o.phone ? `<a class="c-call" href="tel:${esc(o.phone)}">📞 ${esc(o.phone)}</a>` : '';
+            if (o.orderStatus === 'READY') {
+                actions = `${phoneLink}<button type="button" class="c-pickup" onclick="pickupOrder(${o.id})">📦 Заказды алдым</button>`;
+            } else if (o.orderStatus === 'GIVEN_TO_COURIER') {
+                actions = `${phoneLink}<button type="button" class="c-deliver" onclick="deliverOrder(${o.id})">✅ Кардарга бердим</button>`;
+            } else {
+                actions = phoneLink;
+            }
+        }
+        return `<article class="${cls}">
+            <div class="c-order-num">${esc(o.displayOrderNumber || '#' + o.id)}</div>
+            ${!isHistory ? orderStatusBanner(o) : ''}
+            ${!isHistory ? addressButton(o) : `<div class="c-order-meta">📍 ${esc(o.address || '—')}</div>`}
+            <div class="c-order-meta">👤 ${esc(o.customerName)} · 💰 ${money(o.totalPrice)} сом
+            ${isHistory ? '<br>🕐 ' + fmtTime(o.deliveredAt) : ''}</div>
+            <div class="c-order-items">${esc(o.itemName)}</div>
+            ${actions}
+        </article>`;
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.getElementById('tabActive').classList.toggle('active', tab === 'active');
+        document.getElementById('tabHistory').classList.toggle('active', tab === 'history');
+        document.getElementById('panelActive').classList.toggle('active', tab === 'active');
+        document.getElementById('panelHistory').classList.toggle('active', tab === 'history');
+        if (tab === 'history') loadHistory();
+        else refreshActive();
+    }
+
+    function showLogin() {
+        currentCourier = null;
+        document.getElementById('loginBox').classList.remove('c-hidden');
+        document.getElementById('appBox').classList.add('c-hidden');
+        document.getElementById('refreshFab').classList.add('c-hidden');
+        document.getElementById('headerSub').textContent = 'Ratlion — жеке аккаунт';
+    }
+
+    function showApp(courier) {
+        currentCourier = courier;
+        localStorage.setItem('courierId', courier.id);
+        localStorage.setItem('courierPhone', courier.phone || '');
+        localStorage.setItem('courierName', courier.name || '');
+        document.getElementById('loginBox').classList.add('c-hidden');
+        document.getElementById('appBox').classList.remove('c-hidden');
+        document.getElementById('refreshFab').classList.remove('c-hidden');
+        document.getElementById('profileName').textContent = courier.name || 'Курьер';
+        document.getElementById('profilePhone').textContent = '📞 ' + (courier.phone || '—');
+        document.getElementById('headerSub').textContent = courier.name + ' · жеке панель';
+        refreshAll();
+    }
+
+    async function courierLogin() {
+        const name = document.getElementById('loginName').value.trim();
+        const phone = document.getElementById('loginPhone').value.trim();
+        const errEl = document.getElementById('loginError');
+        errEl.classList.add('c-hidden');
+        if (!phone) {
+            errEl.textContent = 'Телефонду жазыңыз';
+            errEl.classList.remove('c-hidden');
+            return;
+        }
+        try {
+            let res = await fetch('/api/couriers/by-phone?phone=' + encodeURIComponent(phone));
+            if (res.ok) {
+                showApp(await res.json());
+                return;
+            }
+            if (!name) {
+                errEl.textContent = 'Жаңы аккаунт үчүн атыңызды жазыңыз';
+                errEl.classList.remove('c-hidden');
+                return;
+            }
+            res = await fetch('/api/couriers/register-phone', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, phone })
+            });
+            if (!res.ok) throw new Error('fail');
+            showApp(await res.json());
+        } catch (e) {
+            errEl.textContent = 'Кирүү ишке ашкан жок';
+            errEl.classList.remove('c-hidden');
+        }
+    }
+
+    function courierLogout() {
+        localStorage.removeItem('courierId');
+        localStorage.removeItem('courierPhone');
+        localStorage.removeItem('courierName');
+        showLogin();
+    }
+
+    async function tryAutoLogin() {
+        const params = new URLSearchParams(location.search);
+        const phone = params.get('phone') || localStorage.getItem('courierPhone') || '';
+        const name = params.get('name') || localStorage.getItem('courierName') || '';
+        if (phone) document.getElementById('loginPhone').value = phone;
+        if (name) document.getElementById('loginName').value = name;
+        if (!phone) return;
+        try {
+            let res = await fetch('/api/couriers/by-phone?phone=' + encodeURIComponent(phone));
+            if (res.ok && name) {
+                res = await fetch('/api/couriers/register-phone', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, phone })
+                });
+            }
+            if (res.ok) showApp(await res.json());
+        } catch (e) { /* login form */ }
+    }
+
+    async function refreshActive() {
+        if (!currentCourier) return;
+        const cid = currentCourier.id;
+        try {
+            const [activeRes, poolRes, offersRes] = await Promise.all([
+                fetch('/orders/courier?courierId=' + cid),
+                fetch('/orders/courier/available'),
+                fetch('/orders/courier/offers?courierId=' + cid)
+            ]);
+            const active = await activeRes.json();
+            const pool = await poolRes.json();
+            const offers = await offersRes.json();
+
+            document.getElementById('badgeActive').textContent = offers.length + active.length;
+
+            let html = '';
+            if (offers.length) {
+                html += '<div class="c-section-title">❓ Жаңы суроолор — жооп бер</div>'
+                    + offers.map(o => offerCard(o)).join('');
+            }
+            if (active.length) {
+                html += '<div class="c-section-title">📦 Менин заказдарым</div>'
+                    + active.map(o => orderCard(o, 'active')).join('');
+            }
+            if (pool.length) {
+                html += '<div class="c-section-title">🆕 Бош заказдар (ресторанда даяр)</div>'
+                    + pool.map(o => orderCard(o, 'pool')).join('');
+            }
+
+            const activeBox = document.getElementById('activeBox');
+            if (html) {
+                activeBox.innerHTML = html;
+            } else {
+                activeBox.innerHTML = '<div class="c-empty">📭 Заказ жок<br><small>Ашкана «Даярдоону баштоо» басса, бул жерде «Кабыл аласызбы?» чыгат</small></div>';
+            }
+            document.getElementById('poolBox').innerHTML = '';
+        } catch (e) {
+            document.getElementById('activeBox').innerHTML = '<div class="c-empty">Жүктөлбөдү</div>';
+        }
+    }
+
+    async function loadHistory() {
+        if (!currentCourier) return;
+        const box = document.getElementById('historyBox');
+        try {
+            const res = await fetch('/orders/courier/history?courierId=' + currentCourier.id);
+            const list = await res.json();
+            document.getElementById('badgeHistory').textContent = list.length;
+            if (!list.length) {
+                box.innerHTML = '<div class="c-empty">📜 Тарых бош<br><small>Жеткирген заказдар бул жерде сакталат</small></div>';
+                return;
+            }
+            box.innerHTML = list.map(o => orderCard(o, 'history')).join('');
+        } catch (e) {
+            box.innerHTML = '<div class="c-empty">Жүктөлбөдү</div>';
+        }
+    }
+
+    function refreshAll() {
+        loadNotifications();
+        if (currentTab === 'history') loadHistory();
+        else refreshActive();
+    }
+
+    async function loadNotifications() {
+        if (!currentCourier) return;
+        const box = document.getElementById('alertBox');
+        try {
+            const res = await fetch('/api/couriers/notifications?courierId=' + currentCourier.id);
+            const list = await res.json();
+            const alerts = list.filter(n => n.type === 'PICKUP');
+            if (list.length > lastNotifyCount && lastNotifyCount > 0 && list[0]) {
+                showToast(list[0].message);
+            }
+            lastNotifyCount = list.length;
+            if (!alerts.length) {
+                box.classList.add('c-hidden');
+                box.innerHTML = '';
+                return;
+            }
+            box.classList.remove('c-hidden');
+            box.innerHTML = alerts.slice(0, 2).map(n =>
+                `<div class="c-notify c-notify-${esc(n.type)}" onclick="markNotifyRead(${n.id}, this)">
+                    ${esc(n.message)}
+                    <div class="c-notify-time">${fmtTime(n.createdAt)} · бас — жабуу</div>
+                </div>`
+            ).join('');
+        } catch (e) {
+            box.classList.add('c-hidden');
+        }
+    }
+
+    function showToast(msg) {
+        const el = document.getElementById('toastBox');
+        el.className = 'c-toast';
+        el.textContent = msg.replace(/\n/g, ' · ').slice(0, 220);
+        setTimeout(function () { el.classList.add('c-hidden'); }, 5000);
+        if ('vibrate' in navigator) navigator.vibrate(200);
+    }
+
+    async function markNotifyRead(id, el) {
+        await fetch('/api/couriers/notifications/' + id + '/read', { method: 'PUT' });
+        if (el) el.remove();
+        loadNotifications();
+    }
+
+    async function markAllNotifyRead() {
+        if (!currentCourier) return;
+        await fetch('/api/couriers/notifications/read-all?courierId=' + currentCourier.id, { method: 'PUT' });
+        lastNotifyCount = 0;
+        loadNotifications();
+    }
+
+    async function acceptOffer(orderId) {
+        if (!currentCourier) return;
+        await runAction(async () => {
+            const res = await fetch('/orders/' + orderId + '/courier-accept?courierId=' + currentCourier.id, { method: 'PUT' });
+            if (res.status === 409) {
+                alert('Бул заказ башка курьер тарабынан алынган');
+                refreshAll();
+                return;
+            }
+            if (!res.ok) {
+                alert('Кабыл алуу ишке ашкан жок');
+                return;
+            }
+            refreshAll();
+        });
+    }
+
+    async function declineOffer(orderId) {
+        if (!currentCourier) return;
+        await fetch('/orders/' + orderId + '/courier-decline?courierId=' + currentCourier.id, { method: 'PUT' });
+        refreshAll();
+    }
+
+    async function takeOrder(id) {
+        if (!currentCourier) return;
+        const res = await fetch('/orders/' + id + '/take?courierId=' + currentCourier.id, { method: 'PUT' });
+        if (res.status === 409) {
+            alert('Бул заказ башка курьер тарабынан алынган');
+            refreshActive();
+            return;
+        }
+        if (!res.ok) {
+            alert('Алуу ишке ашкан жок');
+            return;
+        }
+        refreshActive();
+    }
+
+    async function pickupOrder(id) {
+        if (!currentCourier) return;
+        await runAction(async () => {
+            const res = await fetch('/orders/' + id + '/courier-pickup?courierId=' + currentCourier.id, { method: 'PUT' });
+            if (res.status === 403) {
+                alert('Бул заказ сизге таандык эмес');
+                return;
+            }
+            if (!res.ok) {
+                alert('Ишке ашкан жок');
+                return;
+            }
+            refreshAll();
+        });
+    }
+
+    async function deliverOrder(id) {
+        if (!currentCourier) return;
+        await runAction(async () => {
+            const res = await fetch('/orders/' + id + '/deliver?courierId=' + currentCourier.id, { method: 'PUT' });
+            if (res.status === 403) {
+                alert('Бул заказ сизге таандык эмес');
+                return;
+            }
+            if (res.ok) refreshAll();
+            else alert('Ишке ашкан жок');
+        });
+    }
+
+    tryAutoLogin();
+    setInterval(function () { if (currentCourier) refreshAll(); }, 8000);
+</script>
+</body>
+</html>

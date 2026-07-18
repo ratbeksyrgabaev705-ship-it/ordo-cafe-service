@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: ordo-cafe
+    runtime: docker
+    plan: free
+    healthCheckPath: /
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: COURIER_DEFAULT_PHONE
+        value: "0990912913"
+      - key: COURIER_DEFAULT_NAME
+        value: "Сыргый"
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: TELEGRAM_MANAGER_CHAT_ID
+        sync: false

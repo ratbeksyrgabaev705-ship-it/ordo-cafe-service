@@ -1,0 +1,553 @@
+package kg.restaurant.order.config;
+
+import kg.restaurant.order.model.Courier;
+import kg.restaurant.order.model.CustomerOrder;
+import kg.restaurant.order.model.MenuItem;
+import kg.restaurant.order.model.Restaurant;
+import kg.restaurant.order.repository.CourierRepository;
+import kg.restaurant.order.repository.CustomerOrderRepository;
+import kg.restaurant.order.repository.MenuItemRepository;
+import kg.restaurant.order.repository.RestaurantRepository;
+import kg.restaurant.order.util.PhoneUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+public class RestaurantDataInitializer implements CommandLineRunner {
+
+    private static final Logger log = LoggerFactory.getLogger(RestaurantDataInitializer.class);
+    private static final int MAX_RESTAURANTS = 50;
+
+    private final RestaurantRepository restaurantRepository;
+    private final CustomerOrderRepository orderRepository;
+    private final MenuItemRepository menuItemRepository;
+    private final CourierRepository courierRepository;
+
+    @Value("${courier.default.phone:0990912913}")
+    private String defaultCourierPhone;
+
+    @Value("${courier.default.name:Сыргый}")
+    private String defaultCourierName;
+
+    public RestaurantDataInitializer(
+            RestaurantRepository restaurantRepository,
+            CustomerOrderRepository orderRepository,
+            MenuItemRepository menuItemRepository,
+            CourierRepository courierRepository
+    ) {
+        this.restaurantRepository = restaurantRepository;
+        this.orderRepository = orderRepository;
+        this.menuItemRepository = menuItemRepository;
+        this.courierRepository = courierRepository;
+    }
+
+    @Override
+    public void run(String... args) {
+        seedRestaurants();
+        migrateFemiliToFamily();
+        ensureRestaurantsActive();
+        ensureFamilyRestaurant();
+        syncCustomerUrls();
+        backfillRestaurantIds();
+        seedFamilyMenuIfEmpty();
+        ensureFamilyPizzas();
+        syncFamilyMenuImages();
+        syncFamilyMenuDetails();
+        ensureDefaultCourier();
+    }
+
+    /** Тест курьери — телефон менен /courier панелине кирет */
+    private void ensureDefaultCourier() {
+        String phone = PhoneUtils.normalize(defaultCourierPhone);
+        if (phone.isBlank()) {
+            return;
+        }
+        courierRepository.findByPhone(phone).ifPresentOrElse(c -> {
+            boolean changed = false;
+            if (!Boolean.TRUE.equals(c.getActive())) {
+                c.setActive(true);
+                changed = true;
+            }
+            if (defaultCourierName != null && !defaultCourierName.isBlank()
+                    && !defaultCourierName.equals(c.getName())) {
+                c.setName(defaultCourierName);
+                changed = true;
+            }
+            if (changed) {
+                courierRepository.save(c);
+            }
+        }, () -> {
+            Courier courier = new Courier();
+            courier.setName(defaultCourierName);
+            courier.setPhone(phone);
+            courier.setTelegramChatId("phone:" + phone);
+            courier.setActive(true);
+            courierRepository.save(courier);
+            log.info("Created default courier: {} ({})", defaultCourierName, phone);
+        });
+    }
+
+    /** Эski DB: active=null болсо, ресторан көрүнбөй калат */
+    private void ensureRestaurantsActive() {
+        for (Restaurant r : restaurantRepository.findAll()) {
+            boolean changed = false;
+            if (r.getActive() == null) {
+                r.setActive(true);
+                changed = true;
+            }
+            if (r.getAcceptingOrders() == null) {
+                r.setAcceptingOrders(true);
+                changed = true;
+            }
+            if (changed) {
+                restaurantRepository.save(r);
+            }
+        }
+    }
+
+    /** Family ресторан ар дайым бар болушu керек */
+    private void ensureFamilyRestaurant() {
+        Restaurant family = restaurantRepository.findBySlug("family").orElse(null);
+        if (family == null) {
+            family = buildRestaurant(
+                    "FAMILY_PARK", "family", "F", "#5C1A1A", "FP",
+                    "Даамдуу тамактар — үй-бүлөңүз үчүн"
+            );
+            restaurantRepository.save(family);
+            log.info("Created missing Family restaurant");
+            return;
+        }
+        family.setActive(true);
+        family.setAcceptingOrders(true);
+        family.setName("FAMILY_PARK");
+        family.setCustomerUrl("/r/family");
+        if (family.getAccentColor() == null || family.getAccentColor().isBlank()) {
+            family.setAccentColor("#5C1A1A");
+        }
+        restaurantRepository.save(family);
+    }
+
+    private void syncFamilyMenuDetails() {
+        Restaurant family = restaurantRepository.findBySlug("family").orElse(null);
+        if (family == null) {
+            return;
+        }
+
+        java.util.Map<String, String[]> details = java.util.Map.ofEntries(
+                entry("Пепперони",
+                        "Кытырак камыр, пепперони колбасасы жана моцарелла сыры кошулган классикалык пицца.",
+                        "Хрустящее тесто с пепперoni и моцареллой — классическая пицца.",
+                        "Камыр, Пепперони колбасасы, Моцарелла сыры, Томатный соус, Орегано",
+                        "Тесто, Пепперoni, Моцарелла, Томатный соус, Ореганo"),
+                entry("Маргарита",
+                        "Томат соус, свежая моцарелла и базилик — жеңил жана даамдуу классика.",
+                        "Томатный соус, свежая моцарелла и базилик — лёгкая классика.",
+                        "Камыр, Томатный соус, Моцарелла сыры, Базилик, Оливковое масло",
+                        "Тесто, Томатный соус, Моцарелла, Базилик, Оливковое масло"),
+                entry("4 Сыры",
+                        "Төр түрдүү сырдын бай даамы — мoцарелла, пармезан, дор блю, чеддер.",
+                        "Четыре вида сыра — мoцарелла, пармезан, дор блю, чеддер.",
+                        "Камыр, Моцарелла сыры, Пармезан, Дор блю, Чеддер, Томатный соус",
+                        "Тесто, Моцарелла, Пармезан, Дор блю, Чеддер, Томатный соус"),
+                entry("Гавайская",
+                        "Тatтуu ананас жана ветчина — жагымдуу комбинация.",
+                        "Сладкий ананас и ветчина — приятное сочетание.",
+                        "Камыр, Ветчина, Ананас, Моцарелла сыры, Томатный соус",
+                        "Тесто, Ветчина, Ананас, Моцарелла, Томатный соус"),
+                entry("BBQ Chicken",
+                        "BBQ соустуу тоок эти, пияз жана мoцарелла.",
+                        "Курица в BBQ соусе с луком и мoцареллой.",
+                        "Камыр, Куриное филе, BBQ соус, Лук, Моцарелла сыры",
+                        "Тесто, Куриное филе, BBQ соус, Лук, Моцарелла"),
+                entry("Диабло",
+                        "Кыянуу колбasa жана калемпир — оттуу даам сүйерлер үчүн.",
+                        "Острая колбaca и перец — для любителей острого.",
+                        "Камыр, Острая колбаса, Красный перец, Моцарелла сыры, Томатный соус",
+                        "Тесто, Острая колбaca, Красный перец, Моцарелла, Томатный соус"),
+                entry("Мясная",
+                        "Бекон, ветчина, пепперони жана фарш — эти сүйерлер үчүн.",
+                        "Бекон, ветчина, пепперoni и фарш — для мясоядов.",
+                        "Камыр, Бекон, Ветчина, Пепперони, Говяжий фарш, Моцарелла сыры",
+                        "Тесто, Бекон, Ветчина, Пепперoni, Говяжий фарш, Моцарелла"),
+                entry("Вегетарианская",
+                        "Жашылчалар, кozу карын жана мoцарелла — жеңил тамак.",
+                        "Овощи, грибы и мoцарелла — лёгкое блюдо.",
+                        "Камыр, Болгарский перец, Шампиньоны, Моцарелла сыры, Томатный соус",
+                        "Тесто, Болгарский перец, Шампиньоны, Моцарелла, Томатный соус"),
+                entry("4 сезона",
+                        "Бир пиццада төр түрдүү начинка — ар бир бөлүгү өз даамында.",
+                        "Четыре начинки на одной пицце — каждая часть со своим вкусом.",
+                        "Камыр, Пепперони, Грибы, Артишоки, Моцарелла сыры, Томатный соус",
+                        "Тесто, Пепперoni, Грибы, Артишоки, Моцарелла, Томатный соус"),
+                entry("Тунец",
+                        "Жаңы тунец, пияз жана мoцарелла — деңиз даамы.",
+                        "Свежий тунец с луком и мoцареллой — морской вкус.",
+                        "Камыр, Тунец, Лук, Моцарелла сыры, Томатный соус, Ореганo",
+                        "Тесто, Тунец, Лук, Моцарелла, Томатный соус, Ореганo"),
+                entry("Филадельфия",
+                        "Лосось, сыр и огурец — классический ролл.",
+                        "Лосось, сыр и огурец — классический ролл.",
+                        "Лосось, Сливочный сыр, Огурец, Рис, Нori",
+                        "Лосось, Сливочный сыр, Огурец, Рис, Нori"),
+                entry("Калифорния",
+                        "Кrab, авокадо и огурец — нежный ролл.",
+                        "Кrab, авокадо и огурец — нежный ролл.",
+                        "Кrab, Авокадо, Огурец, Рис, Икра тобико",
+                        "Кrab, Авокадо, Огурец, Рис, Икра тобико"),
+                entry("Темпура",
+                        "Креветка в темпуре с рисом и nori.",
+                        "Креветка в темпуре с рисом и nori.",
+                        "Креветка, Темпурное тесто, Рис, Нori, Соус",
+                        "Креветка, Темпурное тесто, Рис, Нori, Соус"),
+                entry("Ribeye",
+                        "Мраморная говядина ribeye — medium rare.",
+                        "Мраморная говядина ribeye — medium rare.",
+                        "Говядина ribeye, Соль, Перец, Чеснок, Масло",
+                        "Говядина ribeye, Соль, Перец, Чеснок, Масло"),
+                entry("T-Bone",
+                        "Классический T-Bone стейк — сочный и ароматный.",
+                        "Классический T-Bone стейк — сочный и ароматный.",
+                        "Говядина T-Bone, Соль, Перец, Розмарин, Масло",
+                        "Говядина T-Bone, Соль, Перец, Розмарин, Масло"),
+                entry("Carbonara",
+                        "Спагетти, бекон, сливки и пармезан.",
+                        "Спагетти, бекон, сливки и пармезан.",
+                        "Спагетти, Бекон, Сливки, Пармезан, Яичный желток",
+                        "Спагетти, Бекон, Сливки, Пармезан, Яичный желток"),
+                entry("Болоньезе",
+                        "Классический болоньезе с говяжьим фаршом.",
+                        "Классический болоньезе с гovяжьим фаршом.",
+                        "Спагетти, Говяжий фарш, Томатный соус, Лук, Морковь",
+                        "Спагетти, Говяжий фарш, Томатный соус, Лук, Морковь")
+        );
+
+        for (MenuItem item : menuItemRepository.findByRestaurantId(family.getId())) {
+            String name = item.getNameKg() != null ? item.getNameKg() : item.getName();
+            if (name == null || !details.containsKey(name)) {
+                continue;
+            }
+            String[] d = details.get(name);
+            item.setDescriptionKg(d[0]);
+            item.setDescriptionRu(d[1]);
+            item.setIngredientsKg(d[2]);
+            item.setIngredientsRu(d[3]);
+            item.setDescription(d[0]);
+            item.setIngredients(d[2]);
+            menuItemRepository.save(item);
+        }
+    }
+
+    private static java.util.Map.Entry<String, String[]> entry(
+            String name,
+            String descKg,
+            String descRu,
+            String ingKg,
+            String ingRu
+    ) {
+        return java.util.Map.entry(name, new String[] { descKg, descRu, ingKg, ingRu });
+    }
+
+    private void ensureFamilyPizzas() {
+        Restaurant family = restaurantRepository.findBySlug("family").orElse(null);
+        if (family == null) {
+            return;
+        }
+
+        Long rid = family.getId();
+        java.util.Set<String> existing = menuItemRepository.findByRestaurantId(rid).stream()
+                .map(item -> item.getNameKg() != null ? item.getNameKg() : item.getName())
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toSet());
+
+        List<MenuItem> pizzas = List.of(
+                familyItem(rid, "Пепперони", "Пепперони", "Пицца", "Пицца",
+                        "Хрустящее тесто, пепперoni, моцарелла",
+                        "Хрусталдай камыр, пепперони, моцарелла",
+                        750.0, "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80"),
+                familyItem(rid, "Маргарита", "Маргарита", "Пицца", "Пицца",
+                        "Томат соус, моцарелла, базилик",
+                        "Томат соус, моцарелла, базилик",
+                        650.0, "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=80"),
+                familyItem(rid, "4 Сыры", "4 Сыры", "Пицца", "Пицца",
+                        "Моцарелла, пармезан, дор блю, чеддер",
+                        "Моцарелла, пармезан, дор блю, чеддер",
+                        820.0, "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80"),
+                familyItem(rid, "Гавайская", "Гавайская", "Пицца", "Пицца",
+                        "Ветчина, ананас, моцарелла",
+                        "Ветчина, ананас, моцарелла",
+                        780.0, "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80"),
+                familyItem(rid, "BBQ Чicken", "BBQ Chicken", "Пицца", "Пицца",
+                        "Курица, BBQ соус, лук",
+                        "Тоок, BBQ соус, пияз",
+                        790.0, "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80"),
+                familyItem(rid, "Диабло", "Диабло", "Пицца", "Пицца",
+                        "Острая колбаса, перец, моцарелла",
+                        "Кыянуу колбаса, калемпир, моцарелла",
+                        770.0, "https://images.unsplash.com/photo-1571407970344-bc597e046769?w=400&q=80"),
+                familyItem(rid, "Мясная", "Мясная", "Пицца", "Пицца",
+                        "Бекон, ветчина, пепперoni, фарш",
+                        "Бекон, ветчина, пепперони, фарш",
+                        890.0, "https://images.unsplash.com/photo-1593504049359-74330189a345?w=400&q=80"),
+                familyItem(rid, "Вегетарианская", "Вегетарианская", "Пицца", "Пицца",
+                        "Овощи, грибы, моцарелла",
+                        "Жашылчалар, козу карын, моцарелла",
+                        680.0, "https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=400&q=80"),
+                familyItem(rid, "4 сезона", "4 сезона", "Пицца", "Пицца",
+                        "Четыре вида начинки на одной пицце",
+                        "Бир пиццада төр түрдүү начинка",
+                        850.0, "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&q=80"),
+                familyItem(rid, "Тунец", "Тунец", "Пицца", "Пицца",
+                        "Тунец, лук, моцарелла",
+                        "Тунец, пияз, моцарелла",
+                        810.0, "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80")
+        );
+
+        List<MenuItem> toAdd = pizzas.stream()
+                .filter(p -> !existing.contains(p.getNameKg()))
+                .toList();
+
+        if (!toAdd.isEmpty()) {
+            menuItemRepository.saveAll(toAdd);
+            log.info("Added {} pizza item(s) for FAMILY_PARK", toAdd.size());
+        }
+    }
+
+    private void seedFamilyMenuIfEmpty() {
+        Restaurant family = restaurantRepository.findBySlug("family").orElse(null);
+        if (family == null) {
+            return;
+        }
+
+        long existing = menuItemRepository.findByRestaurantId(family.getId()).size();
+        if (existing > 0) {
+            return;
+        }
+
+        Long rid = family.getId();
+        List<MenuItem> demo = List.of(
+                familyItem(rid, "Пепперони", "Пепперони", "Пицца", "Пицца",
+                        "Хрустящее тесто, пепперoni, моцарелла",
+                        "Хрусталдай камыр, пепперони колбасасы, моцарелла сыры",
+                        750.0, "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80"),
+                familyItem(rid, "Маргарита", "Маргарита", "Пицца", "Пицца",
+                        "Томат соус, моцарелла, базилик",
+                        "Томат соус, моцарелла, базилик",
+                        650.0, "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=80"),
+                familyItem(rid, "4 Сыры", "4 Сыры", "Пицца", "Пицца",
+                        "Моцарелла, пармезан, дор блю, чеддер",
+                        "Моцарелла, пармезан, дор блю, чеддер",
+                        820.0, "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80"),
+                familyItem(rid, "Филадельфия", "Филадельфия", "Суши", "Суши",
+                        "Лосось, сыр, огурец",
+                        "Лосось, сыр, огурец",
+                        690.0, "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&q=80"),
+                familyItem(rid, "Калифорния", "Калифорния", "Суши", "Суши",
+                        "Краб, авокадо, огурец",
+                        "Краб, авокадо, огурец",
+                        720.0, "https://images.unsplash.com/photo-1553621042-f6e147245754?w=400&q=80"),
+                familyItem(rid, "Темпура", "Темпура", "Суши", "Суши",
+                        "Креветка в темпуре, рис, нори",
+                        "Креветка в темпуре, рис, нори",
+                        780.0, "https://images.unsplash.com/photo-1564489563601-c53cfc451e93?w=400&q=80"),
+                familyItem(rid, "Ribeye", "Ribeye", "Стейк", "Стейк",
+                        "Мраморная говядина, medium rare",
+                        "Мрамордуу уй эти, medium rare",
+                        1450.0, "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=80"),
+                familyItem(rid, "T-Bone", "T-Bone", "Стейк", "Стейк",
+                        "Классический T-Bone стейк",
+                        "Классикалык T-Bone стейк",
+                        1650.0, "https://images.unsplash.com/photo-1600891964593-f84529778196?w=400&q=80"),
+                familyItem(rid, "Carbonara", "Carbonara", "Паста", "Паста",
+                        "Спагетти, бекон, сливки, пармезан",
+                        "Спагетти, бекон, сливки, пармезан",
+                        690.0, "https://images.unsplash.com/photo-1612874742237-652c76d6a886?w=400&q=80"),
+                familyItem(rid, "Болоньезе", "Болоньезе", "Паста", "Паста",
+                        "Фарш, томат, спагетти",
+                        "Фарш, томат, спагетти",
+                        720.0, "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&q=80")
+        );
+
+        menuItemRepository.saveAll(demo);
+        log.info("Seeded {} demo menu items for FAMILY_PARK (id={})", demo.size(), rid);
+    }
+
+    private void syncFamilyMenuImages() {
+        Restaurant family = restaurantRepository.findBySlug("family").orElse(null);
+        if (family == null) {
+            return;
+        }
+
+        java.util.Map<String, String> images = java.util.Map.ofEntries(
+                java.util.Map.entry("Пепперони", "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80"),
+                java.util.Map.entry("Маргарита", "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=80"),
+                java.util.Map.entry("4 Сыры", "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80"),
+                java.util.Map.entry("Гавайская", "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80"),
+                java.util.Map.entry("BBQ Chicken", "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80"),
+                java.util.Map.entry("Диабло", "https://images.unsplash.com/photo-1571407970344-bc597e046769?w=400&q=80"),
+                java.util.Map.entry("Мясная", "https://images.unsplash.com/photo-1593504049359-74330189a345?w=400&q=80"),
+                java.util.Map.entry("Вегетарианская", "https://images.unsplash.com/photo-1571997478779-2adcbbe9ab2f?w=400&q=80"),
+                java.util.Map.entry("4 сезона", "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=400&q=80"),
+                java.util.Map.entry("Тунец", "https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=400&q=80"),
+                java.util.Map.entry("Филадельфия", "https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&q=80"),
+                java.util.Map.entry("Калифорния", "https://images.unsplash.com/photo-1553621042-f6e147245754?w=400&q=80"),
+                java.util.Map.entry("Темпура", "https://images.unsplash.com/photo-1564489563601-c53cfc451e93?w=400&q=80"),
+                java.util.Map.entry("Ribeye", "https://images.unsplash.com/photo-1546833999-b9f581a1996d?w=400&q=80"),
+                java.util.Map.entry("T-Bone", "https://images.unsplash.com/photo-1600891964593-f84529778196?w=400&q=80"),
+                java.util.Map.entry("Carbonara", "https://images.unsplash.com/photo-1612874742237-652c76d6a886?w=400&q=80"),
+                java.util.Map.entry("Болоньезе", "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400&q=80")
+        );
+
+        for (MenuItem item : menuItemRepository.findByRestaurantId(family.getId())) {
+            String name = item.getNameKg() != null ? item.getNameKg() : item.getName();
+            if (name == null || !images.containsKey(name)) {
+                continue;
+            }
+            String url = images.get(name);
+            if (url.equals(item.getImage())) {
+                continue;
+            }
+            item.setImage(url);
+            menuItemRepository.save(item);
+        }
+    }
+
+    private MenuItem familyItem(
+            Long restaurantId,
+            String nameKg,
+            String nameRu,
+            String categoryKg,
+            String categoryRu,
+            String descKg,
+            String descRu,
+            double price,
+            String imageUrl
+    ) {
+        MenuItem item = new MenuItem();
+        item.setRestaurantId(restaurantId);
+        item.setName(nameKg);
+        item.setNameKg(nameKg);
+        item.setNameRu(nameRu);
+        item.setCategory(categoryKg);
+        item.setCategoryKg(categoryKg);
+        item.setCategoryRu(categoryRu);
+        item.setDescriptionKg(descKg);
+        item.setDescriptionRu(descRu);
+        item.setIngredientsKg(descKg);
+        item.setIngredientsRu(descRu);
+        item.setPrice(price);
+        item.setImage(imageUrl);
+        item.setAvailable(true);
+        item.setWeight(350);
+        return item;
+    }
+
+    private void migrateFemiliToFamily() {
+        restaurantRepository.findBySlug("femili").ifPresent(old -> {
+            old.setName("FAMILY_PARK");
+            old.setSlug("family");
+            old.setEmoji("F");
+            old.setAccentColor("#5C1A1A");
+            old.setOrderPrefix("FP");
+            old.setTagline("Даамдуу тамактар — үй-бүлөңүз үчүн");
+            old.setCustomerUrl("/r/family");
+            restaurantRepository.save(old);
+            log.info("Migrated Femili → Family restaurant");
+        });
+    }
+
+    private void seedRestaurants() {
+        if (restaurantRepository.count() > 0) {
+            return;
+        }
+
+        List<Restaurant> defaults = List.of(
+                buildRestaurant("ОРДО КАФЕ", "ordo", "🍽", "#c9a227", "ОД", "Улуттук тамактар жана кофе"),
+                buildRestaurant("FAMILY_PARK", "family", "F", "#5C1A1A", "FP", "Даамдуу тамактар — үй-бүлөңүз үчүн"),
+                buildRestaurant("Aga-Ini", "aga-ini", "🥘", "#D4AF37", "AI", "Улуттук тамактар"),
+                buildRestaurant("Burger Men", "burger-men", "🍔", "#FF0000", "BM", "Бургерлер жана комбо"),
+                buildRestaurant("Zhorolor Samsa", "zhorolor", "🥟", "#2D6A4F", "ZS", "Самса жана выпечка")
+        );
+
+        restaurantRepository.saveAll(defaults);
+        log.info("Seeded {} default restaurants", defaults.size());
+    }
+
+    private Restaurant buildRestaurant(
+            String name,
+            String slug,
+            String emoji,
+            String accentColor,
+            String orderPrefix,
+            String tagline
+    ) {
+        Restaurant restaurant = new Restaurant(name, slug, emoji, accentColor, orderPrefix);
+        restaurant.setTagline(tagline);
+        restaurant.setCustomerUrl("/r/" + slug);
+        restaurant.setActive(true);
+        return restaurant;
+    }
+
+    private void syncCustomerUrls() {
+        for (Restaurant restaurant : restaurantRepository.findAll()) {
+            if (restaurant.getSlug() == null || restaurant.getSlug().isBlank()) {
+                continue;
+            }
+            String expected = "/r/" + restaurant.getSlug();
+            boolean changed = false;
+            if (!expected.equals(restaurant.getCustomerUrl())) {
+                restaurant.setCustomerUrl(expected);
+                changed = true;
+            }
+            if (changed) {
+                restaurantRepository.save(restaurant);
+            }
+        }
+    }
+
+    private void backfillRestaurantIds() {
+        Restaurant defaultRestaurant = restaurantRepository.findBySlug("ordo")
+                .orElse(restaurantRepository.findAll().stream().findFirst().orElse(null));
+
+        if (defaultRestaurant == null) {
+            return;
+        }
+
+        Long defaultId = defaultRestaurant.getId();
+        int ordersUpdated = 0;
+        int menuUpdated = 0;
+
+        for (CustomerOrder order : orderRepository.findAll()) {
+            if (order.getRestaurantId() == null) {
+                order.setRestaurantId(defaultId);
+                orderRepository.save(order);
+                ordersUpdated++;
+            }
+        }
+
+        for (MenuItem item : menuItemRepository.findAll()) {
+            if (item.getRestaurantId() == null) {
+                item.setRestaurantId(defaultId);
+                menuItemRepository.save(item);
+                menuUpdated++;
+            }
+        }
+
+        if (ordersUpdated > 0 || menuUpdated > 0) {
+            log.info(
+                    "Backfilled restaurantId={} for {} order(s) and {} menu item(s)",
+                    defaultId,
+                    ordersUpdated,
+                    menuUpdated
+            );
+        }
+    }
+
+    public static int getMaxRestaurants() {
+        return MAX_RESTAURANTS;
+    }
+}

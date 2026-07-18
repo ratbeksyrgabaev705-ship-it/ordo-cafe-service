@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ky" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ratlion Delivery</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Inter, system-ui, sans-serif; background: #0f172a; color: #fff; min-height: 100vh; }
+        .hub { max-width: 720px; margin: 0 auto; padding: 48px 20px; text-align: center; }
+        .hub h1 { font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+        .hub p { color: #94a3b8; margin-bottom: 32px; line-height: 1.5; }
+        .hub-links { display: grid; gap: 10px; text-align: left; margin-bottom: 32px; }
+        .hub-link {
+            display: flex; align-items: center; gap: 12px; padding: 16px 20px;
+            background: #1e293b; border: 1px solid #334155; border-radius: 14px;
+            color: #fff; text-decoration: none; font-weight: 700; transition: border-color 0.2s;
+        }
+        .hub-link:hover { border-color: #dc2626; }
+        .hub-link-featured {
+            background: linear-gradient(135deg, #5C1A1A, #8B2525);
+            border-color: #a83232; padding: 20px;
+        }
+        .hub-link-featured small { display: block; font-size: 12px; font-weight: 500; color: #fecaca; margin-top: 4px; }
+        .hub-rest { display: grid; gap: 8px; text-align: left; }
+        .hub-rest a {
+            display: flex; align-items: center; gap: 10px; padding: 14px 18px;
+            background: #1e293b; border-radius: 12px; color: #e2e8f0; text-decoration: none; font-weight: 600;
+        }
+        .hub-rest a:hover { background: #334155; }
+        .hub-note { font-size: 13px; color: #64748b; text-align: left; margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+<div class="hub">
+    <h1>🔥 Ratlion Delivery</h1>
+    <p>Тамак жеткирүү системасы</p>
+
+    <div class="hub-links">
+        <a class="hub-link hub-link-featured" href="/r/family">
+            🍕 FAMILY_PARK — Кардар менюсу
+            <small>Заказ берүү үчүн бул жерди баскыла →</small>
+        </a>
+        <a class="hub-link" href="/ratlion">🔥 Ratlion (заказ текшерүү)</a>
+        <a class="hub-link" href="/kitchen?slug=family">🏪 Family — Ресторан панели</a>
+        <a class="hub-link" href="/courier?phone=0990912913">🛵 Курьер панели</a>
+    </div>
+
+    <p class="hub-note">Башка ресторандар:</p>
+    <h2 style="font-size:18px;margin-bottom:16px;text-align:left">Ресторандар</h2>
+    <div id="hubRestList" class="hub-rest">
+        <a th:each="r : ${restaurants}" th:href="@{/r/{slug}(slug=${r.slug})}">
+            <span th:text="${r.emoji}">🏪</span>
+            <span th:text="${r.name}">Restaurant</span>
+        </a>
+    </div>
+</div>
+<script>
+(function () {
+    const list = document.getElementById('hubRestList');
+    if (list.children.length > 0) return;
+    fetch('/api/restaurants/public')
+        .then(r => r.json())
+        .then(items => {
+            if (!items.length) {
+                list.innerHTML = '<p style="color:#64748b;padding:12px">Ресторан жок — серверди кайра иштетиңиз</p>';
+                return;
+            }
+            list.innerHTML = items.map(r =>
+                '<a href="/r/' + encodeURIComponent(r.slug) + '">' +
+                (r.emoji || '🏪') + ' ' + escapeHtml(r.name) + '</a>'
+            ).join('');
+        })
+        .catch(() => {
+            list.innerHTML = '<a href="/r/family">🍕 FAMILY_PARK</a><a href="/r/ordo">🍽 ОРДО КАФЕ</a>';
+        });
+    function escapeHtml(v) {
+        return String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+})();
+</script>
+</body>
+</html>
