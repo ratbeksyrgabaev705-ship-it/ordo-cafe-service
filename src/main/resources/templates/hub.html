@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Базар-Коргон — Тамак жеткирүү</title>
+    <title>Тамак жеткирүү</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,8 +30,8 @@
 </head>
 <body>
 <div class="hub">
-    <h1>🍽 Базар-Коргон</h1>
-    <p>Кафeni тандаңыз — менюсу ачылат</p>
+    <h1>🍽 Тамак жеткирүү</h1>
+    <p>Базар-Коргон шаары — кафeni тандаңыз</p>
 
     <div class="hub-links" th:if="${!restaurants.isEmpty()}">
         <a th:each="r : ${restaurants}"
@@ -46,7 +46,7 @@
 
     <p class="hub-admin-title">Админ</p>
     <div class="hub-admin">
-        <a class="hub-link" href="/ratlion">🔥 Ratlion</a>
+        <a class="hub-link" href="/ratlion">🔥 RATLION</a>
         <a class="hub-link" href="/courier">🛵 Курьер</a>
     </div>
 </div>

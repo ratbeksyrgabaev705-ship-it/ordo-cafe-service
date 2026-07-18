@@ -253,8 +253,8 @@
     <div class="modal-box">
         <div id="restaurantModalTitle" class="modal-title">Ресторан кошуу</div>
         <div class="form-grid">
-            <input id="restName" class="input" placeholder="Аты (мисалы: Базар-Коргон)">
-            <input id="restSlug" class="input" placeholder="Slug (bazar-korgon)">
+            <input id="restName" class="input" placeholder="Аты (мисалы: Чайхана)">
+            <input id="restSlug" class="input" placeholder="Slug (chaikhana)">
             <input id="restEmoji" class="input" placeholder="Emoji (🍽)">
             <input id="restColor" class="input" placeholder="Түс (#c9a227)">
             <input id="restPrefix" class="input" placeholder="Заказ префикси (ОД)">
@@ -386,7 +386,7 @@
                 </div>
                 <div class="card-actions">
                     ${r.customerUrl ? `<a class="btn small ghost" href="${escapeHtml(r.customerUrl)}" target="_blank">Меню</a>` : ''}
-                    ${r.slug ? `<a class="btn small ghost" href="/ratlion" target="_blank">Ratlion</a>` : ''}
+                    ${r.slug ? `<a class="btn small ghost" href="/ratlion" target="_blank">RATLION</a>` : ''}
                     ${r.slug ? `<a class="btn small ghost" href="/cafe?slug=${encodeURIComponent(r.slug)}" target="_blank">Ашкана</a>` : ''}
                     <button class="btn small blue" onclick="filterRestaurant(${r.id})">Заказдар</button>
                     <button class="btn small gold" onclick="openRestaurantModal(${r.id})">Түзөтүү</button>

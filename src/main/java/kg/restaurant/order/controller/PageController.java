@@ -41,14 +41,57 @@ public class PageController {
         return "hub";
     }
 
+    @GetMapping("/chaikhana")
+    public String chaikhanaMenu(Model model) {
+        return renderRestaurantPage("chaikhana", model, "index");
+    }
+
+    @GetMapping("/chaikhana/cart")
+    public String chaikhanaCart(Model model) {
+        return renderRestaurantPage("chaikhana", model, "cart");
+    }
+
+    @GetMapping("/burger-men")
+    public String burgerMenMenu(Model model) {
+        return renderRestaurantPage("burger-men", model, "index");
+    }
+
+    @GetMapping("/burger-men/cart")
+    public String burgerMenCart(Model model) {
+        return renderRestaurantPage("burger-men", model, "cart");
+    }
+
+    @GetMapping("/zhorolor")
+    public String zhorolorMenu(Model model) {
+        return renderRestaurantPage("zhorolor", model, "index");
+    }
+
+    @GetMapping("/zhorolor/cart")
+    public String zhorolorCart(Model model) {
+        return renderRestaurantPage("zhorolor", model, "cart");
+    }
+
     @GetMapping("/bazar-korgon")
-    public String bazarKorgonMenu(Model model) {
-        return renderRestaurantPage("bazar-korgon", model, "index");
+    public String legacyBazarKorgonMenu() {
+        return "redirect:/chaikhana";
     }
 
     @GetMapping("/bazar-korgon/cart")
-    public String bazarKorgonCart(Model model) {
-        return renderRestaurantPage("bazar-korgon", model, "cart");
+    public String legacyBazarKorgonCart() {
+        return "redirect:/chaikhana/cart";
+    }
+
+    @GetMapping("/bazar-korgon/item")
+    public String legacyBazarKorgonItem(@RequestParam(required = false) Long id) {
+        if (id != null) {
+            return "redirect:/chaikhana/item?id=" + id;
+        }
+        return "redirect:/chaikhana/item";
+    }
+
+    @GetMapping("/bazar-korgon/receipt")
+    public String legacyBazarKorgonReceipt() {
+        return "redirect:/chaikhana/receipt";
     }
 
     @GetMapping("/family")
@@ -156,35 +199,34 @@ public class PageController {
 
     @GetMapping("/cart")
     public String legacyCart() {
-        return "redirect:/bazar-korgon/cart";
+        return "redirect:/chaikhana/cart";
     }
 
     @GetMapping("/item")
     public String legacyItem(@RequestParam(required = false) Long id) {
         if (id != null) {
-            return "redirect:/bazar-korgon/item?id=" + id;
+            return "redirect:/chaikhana/item?id=" + id;
         }
-        return "redirect:/bazar-korgon/item";
+        return "redirect:/chaikhana/item";
     }
 
     @GetMapping("/receipt")
     public String legacyReceipt() {
-        return "redirect:/bazar-korgon/receipt";
+        return "redirect:/chaikhana/receipt";
+    }
+    @GetMapping("/bazar-korgon-customer.css")
+    public String legacyCustomerCss() {
+        return "redirect:/chaikhana-customer.css";
     }
 
-    @GetMapping("/ordo-customer.css")
-    public String legacyOrdoCss() {
-        return "redirect:/bazar-korgon-customer.css";
+    @GetMapping("/r/bazar-korgon")
+    public String legacyBazarKorgonShortcut() {
+        return "redirect:/chaikhana";
     }
 
-    @GetMapping("/r/ordo")
-    public String legacyOrdoMenu() {
-        return "redirect:/bazar-korgon";
-    }
-
-    @GetMapping("/r/ordo/cart")
-    public String legacyOrdoCart() {
-        return "redirect:/bazar-korgon/cart";
+    @GetMapping("/r/bazar-korgon/cart")
+    public String legacyBazarKorgonCartShortcut() {
+        return "redirect:/chaikhana/cart";
     }
 
     @GetMapping("/femili")

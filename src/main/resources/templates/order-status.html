@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${restaurantName + ' — Заказ статусу'}">Заказ статусу</title>
+    <title th:text="${restaurantName}">Заказ статусу</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -34,7 +34,7 @@
     <script th:inline="javascript">
         window.TRACK = {
             orderId: /*[[${orderId}]]*/ null,
-            base: /*[[${restaurantBase}]]*/ '/bazar-korgon'
+            base: /*[[${restaurantBase}]]*/ '/'
         };
     </script>
 </head>

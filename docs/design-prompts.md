@@ -103,15 +103,15 @@ Kyrgyz national food delivery app.
 
 ---
 
-## 5. ORDO — Кардар меню (🍽 Современный)
+## 5. Чайхана — Кардар меню (🍽 Современный)
 
 ```
-Design a mobile-first food delivery menu page for a modern restaurant called "Ordo".
+Design a mobile-first food delivery menu page for a restaurant called "Chaikhana".
 
 Style: Clean contemporary. Navy blue (#1D3557), light gray background (#F1F1F1), teal accent (#2A9D8F). Minimal, professional, upscale casual dining.
 
 Layout:
-- Top: Minimal logo "ORDO" in navy, thin teal line separator
+- Top: Minimal restaurant name in navy, thin teal line separator
 - Category tabs (minimal underline style): Основные | Супы | Салаты | Гарниры | Напитки
 - Food cards in 2-column grid:
   - Clean square photo with subtle shadow

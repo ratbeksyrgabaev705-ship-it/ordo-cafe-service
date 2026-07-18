@@ -13,10 +13,10 @@
     </parent>
 
     <groupId>kg.restaurant</groupId>
-    <artifactId>ordo-cafe-service</artifactId>
+    <artifactId>ratlion-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>bazar-korgon-service</name>
-    <description>Базар-Коргон — тамак жеткирүү сервиси</description>
+    <name>ratlion-service</name>
+    <description>RATLION — тамак жеткирүү платформасы</description>
 
     <properties>
         <java.version>21</java.version>

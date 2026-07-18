@@ -1,14 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400" role="img" aria-label="ОРДО КАФЕ">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 400" role="img" aria-label="Тамак">
   <defs>
-    <linearGradient id="ordoGold" x1="0%" y1="0%" x2="0%" y2="100%">
+    <linearGradient id="brandGold" x1="0%" y1="0%" x2="0%" y2="100%">
       <stop offset="0%" stop-color="#D9BE63"/>
       <stop offset="50%" stop-color="#C9A84C"/>
       <stop offset="100%" stop-color="#9E7B28"/>
     </linearGradient>
   </defs>
 
-  <g fill="url(#ordoGold)">
-    <!-- Top ornamental crest -->
+  <g fill="url(#brandGold)">
     <path d="M160 24
       C145 24 133 34 128 48
       C123 62 127 74 136 82
@@ -34,29 +33,10 @@
       C152 86 146 80 146 72
       C146 64 152 58 160 58 Z"/>
 
-    <!-- Side curls -->
     <path d="M72 188 C56 184 42 190 32 202 C28 208 30 216 36 220 C46 210 58 204 72 206 Z"/>
     <path d="M248 188 C264 184 278 190 288 202 C292 208 290 216 284 220 C274 210 262 204 248 206 Z"/>
   </g>
 
-  <!-- Decorative divider lines -->
-  <line x1="48" y1="268" x2="272" y2="268" stroke="url(#ordoGold)" stroke-width="2.2" stroke-linecap="round"/>
-  <line x1="72" y1="278" x2="248" y2="278" stroke="url(#ordoGold)" stroke-width="1.4" stroke-linecap="round" opacity="0.9"/>
-
-  <!-- Brand name -->
-  <text x="160" y="328"
-        text-anchor="middle"
-        font-family="'Segoe UI', Arial, sans-serif"
-        font-size="58"
-        font-weight="700"
-        letter-spacing="8"
-        fill="url(#ordoGold)">ОРДО</text>
-
-  <text x="160" y="368"
-        text-anchor="middle"
-        font-family="'Segoe UI', Arial, sans-serif"
-        font-size="24"
-        font-weight="600"
-        letter-spacing="12"
-        fill="url(#ordoGold)">КАФЕ</text>
+  <line x1="48" y1="268" x2="272" y2="268" stroke="url(#brandGold)" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="72" y1="278" x2="248" y2="278" stroke="url(#brandGold)" stroke-width="1.4" stroke-linecap="round" opacity="0.9"/>
 </svg>

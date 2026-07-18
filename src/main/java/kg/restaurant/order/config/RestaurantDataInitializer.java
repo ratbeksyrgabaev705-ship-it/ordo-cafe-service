@@ -50,16 +50,19 @@ public class RestaurantDataInitializer implements CommandLineRunner {
     public void run(String... args) {
         seedRestaurants();
         migrateFemiliToFamily();
+        migrateLegacyRestaurantSlugs();
         ensureRestaurantsActive();
+        ensureChaikhanaRestaurant();
         ensureFamilyRestaurant();
-        ensureBazarKorgonRestaurant();
         ensureAgaIniRestaurant();
-        deactivateCompetitorPlaceholders();
-        purgeOrdoBranding();
+        ensureBurgerMenRestaurant();
+        ensureZhorolorRestaurant();
+        deactivateLegacyRestaurantSlugs();
+        syncAllCityAddresses();
         syncCustomerUrls();
         backfillRestaurantIds();
         seedFamilyMenuIfEmpty();
-        seedBazarKorgonMenuIfEmpty();
+        seedChaikhanaMenuIfEmpty();
         seedAgaIniMenuIfEmpty();
         ensureFamilyPizzas();
         syncFamilyMenuImages();
@@ -132,84 +135,111 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         family.setAcceptingOrders(true);
         family.setName("Family Park");
         family.setCustomerUrl("/family");
+        family.setAddress("Базар-Коргон шаары");
         if (family.getAccentColor() == null || family.getAccentColor().isBlank()) {
             family.setAccentColor("#5C1A1A");
         }
         restaurantRepository.save(family);
     }
 
-    /** Базар-Коргон — негизги ресторан */
-    private void ensureBazarKorgonRestaurant() {
-        Restaurant bk = restaurantRepository.findBySlug("bazar-korgon").orElse(null);
-        Restaurant oldOrdo = restaurantRepository.findBySlug("ordo").orElse(null);
-
-        if (bk == null && oldOrdo != null) {
-            oldOrdo.setSlug("bazar-korgon");
-            bk = oldOrdo;
-        }
-        if (bk == null) {
-            bk = buildRestaurant(
-                    "Базар-Коргон", "bazar-korgon", "🍽", "#c9a227", "БК",
-                    "Лагман, плов, самса — Базар-Коргон"
+    private void ensureChaikhanaRestaurant() {
+        Restaurant chaikhana = restaurantRepository.findBySlug("chaikhana").orElse(null);
+        if (chaikhana == null) {
+            chaikhana = buildRestaurant(
+                    "Чайхана", "chaikhana", "🍜", "#c9a227", "ЧХ",
+                    "Лагман, плов, самса"
             );
-            bk.setAddress("Базар-Коргон шаары");
-            restaurantRepository.save(bk);
-            log.info("Created Bazar-Korgon restaurant");
+            restaurantRepository.save(chaikhana);
+            log.info("Created Chaikhana restaurant");
             return;
         }
-
-        bk.setActive(true);
-        bk.setAcceptingOrders(true);
-        bk.setName("Базар-Коргон");
-        bk.setCustomerUrl("/bazar-korgon");
-        if (bk.getAccentColor() == null || bk.getAccentColor().isBlank()) {
-            bk.setAccentColor("#c9a227");
+        chaikhana.setActive(true);
+        chaikhana.setAcceptingOrders(true);
+        chaikhana.setName("Чайхана");
+        chaikhana.setCustomerUrl("/chaikhana");
+        chaikhana.setTagline("Лагман, плов, самса");
+        chaikhana.setAddress("Базар-Коргон шаары");
+        if (chaikhana.getAccentColor() == null || chaikhana.getAccentColor().isBlank()) {
+            chaikhana.setAccentColor("#c9a227");
         }
-        bk.setTagline("Лагман, плов, самса — Базар-Коргон");
-        if (bk.getAddress() == null || bk.getAddress().isBlank()) {
-            bk.setAddress("Базар-Коргон шаары");
-        }
-        restaurantRepository.save(bk);
-
-        if (oldOrdo != null && !oldOrdo.getId().equals(bk.getId())) {
-            oldOrdo.setActive(false);
-            restaurantRepository.save(oldOrdo);
-            log.info("Deactivated duplicate ordo restaurant record");
-        }
+        restaurantRepository.save(chaikhana);
     }
 
-    /** DB'ден Ordo аталышын тазалоо */
-    private void purgeOrdoBranding() {
+    private void migrateLegacyRestaurantSlugs() {
+        restaurantRepository.findBySlug("bazar-korgon").ifPresent(old -> {
+            if (restaurantRepository.findBySlug("chaikhana").isEmpty()) {
+                old.setSlug("chaikhana");
+                old.setName("Чайхана");
+                old.setTagline("Лагман, плов, самса");
+                old.setCustomerUrl("/chaikhana");
+                old.setOrderPrefix("ЧХ");
+                restaurantRepository.save(old);
+                log.info("Migrated bazar-korgon slug to chaikhana");
+            } else {
+                old.setActive(false);
+                restaurantRepository.save(old);
+            }
+        });
+    }
+
+    private void syncAllCityAddresses() {
         for (Restaurant r : restaurantRepository.findAll()) {
-            String name = r.getName() != null ? r.getName() : "";
-            String upper = name.toUpperCase(java.util.Locale.ROOT);
-            if (upper.contains("ORDO") || name.contains("ОРДО") || upper.contains("ОРДО")) {
-                if ("bazar-korgon".equals(r.getSlug())) {
-                    r.setName("Базар-Коргон");
-                    r.setTagline("Лагман, плов, самса — Базар-Коргон");
-                    r.setCustomerUrl("/bazar-korgon");
-                    restaurantRepository.save(r);
-                    log.info("Purged Ordo branding from restaurant id={}", r.getId());
-                }
+            if (Boolean.FALSE.equals(r.getActive())) {
+                continue;
+            }
+            String addr = r.getAddress();
+            if (addr == null || addr.isBlank() || "Бишкек".equals(addr)) {
+                r.setAddress("Базар-Коргон шаары");
+                restaurantRepository.save(r);
             }
         }
     }
 
-    /** Мисал/конкурент аттары — кардарга көрсөтülбөйт */
-    private void deactivateCompetitorPlaceholders() {
-        for (String slug : List.of("burger-men", "zhorolor", "ordo")) {
-            restaurantRepository.findBySlug(slug).ifPresent(r -> {
-                if ("ordo".equals(slug) && restaurantRepository.findBySlug("bazar-korgon").isPresent()) {
-                    Restaurant bk = restaurantRepository.findBySlug("bazar-korgon").orElse(null);
-                    if (bk != null && !bk.getId().equals(r.getId())) {
-                        r.setActive(false);
-                        restaurantRepository.save(r);
-                    }
-                } else if (!"ordo".equals(slug)) {
+    private void ensureBurgerMenRestaurant() {
+        Restaurant bm = restaurantRepository.findBySlug("burger-men").orElse(null);
+        if (bm == null) {
+            bm = buildRestaurant("Burger Men", "burger-men", "🍔", "#E85D04", "BM", "Бургерлер жана комбо");
+            restaurantRepository.save(bm);
+            return;
+        }
+        bm.setActive(true);
+        bm.setAcceptingOrders(true);
+        bm.setName("Burger Men");
+        bm.setCustomerUrl("/burger-men");
+        bm.setTagline("Бургерлер жана комбо");
+        bm.setAddress("Базар-Коргон шаары");
+        restaurantRepository.save(bm);
+    }
+
+    private void ensureZhorolorRestaurant() {
+        Restaurant zs = restaurantRepository.findBySlug("zhorolor").orElse(null);
+        if (zs == null) {
+            zs = buildRestaurant("Zhorolor Samsa", "zhorolor", "🥟", "#2D6A4F", "ZS", "Самса жана выпечка");
+            restaurantRepository.save(zs);
+            return;
+        }
+        zs.setActive(true);
+        zs.setAcceptingOrders(true);
+        zs.setName("Zhorolor Samsa");
+        zs.setCustomerUrl("/zhorolor");
+        zs.setTagline("Самса жана выпечка");
+        zs.setAddress("Базар-Коргон шаары");
+        restaurantRepository.save(zs);
+    }
+
+    private void deactivateLegacyRestaurantSlugs() {
+        java.util.Set<String> activeSlugs = java.util.Set.of(
+                "chaikhana", "family", "aga-ini", "burger-men", "zhorolor"
+        );
+        for (Restaurant r : restaurantRepository.findAll()) {
+            String slug = r.getSlug();
+            if (slug != null && !slug.isBlank() && !activeSlugs.contains(slug)) {
+                if (!Boolean.FALSE.equals(r.getActive())) {
                     r.setActive(false);
                     restaurantRepository.save(r);
+                    log.info("Deactivated legacy restaurant slug: {}", slug);
                 }
-            });
+            }
         }
     }
 
@@ -221,7 +251,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
                     "Aga-Ini", "aga-ini", "AI", "#6B2737", "AI",
                     "Улуттук тамактар — үйдөгү даам"
             );
-            aga.setAddress("Бишкек");
+            aga.setAddress("Базар-Коргон шаары");
             aga.setBannerUrl("https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&q=80");
             restaurantRepository.save(aga);
             log.info("Created Aga-Ini restaurant");
@@ -237,8 +267,8 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         if (aga.getTagline() == null || aga.getTagline().isBlank()) {
             aga.setTagline("Улуттук тамактар — үйдөгү даам");
         }
-        if (aga.getAddress() == null || aga.getAddress().isBlank()) {
-            aga.setAddress("Бишкек");
+        if (aga.getAddress() == null || aga.getAddress().isBlank() || "Бишкек".equals(aga.getAddress())) {
+            aga.setAddress("Базар-Коргон шаары");
         }
         if (aga.getBannerUrl() == null || aga.getBannerUrl().isBlank()) {
             aga.setBannerUrl("https://images.unsplash.com/photo-1603133872878-684f208fb84b?w=800&q=80");
@@ -298,20 +328,18 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         log.info("Seeded {} menu items for Aga-Ini (id={})", menu.size(), rid);
     }
 
-    private void seedBazarKorgonMenuIfEmpty() {
-        Restaurant bk = restaurantRepository.findBySlug("bazar-korgon")
-                .or(() -> restaurantRepository.findBySlug("ordo"))
-                .orElse(null);
-        if (bk == null) {
+    private void seedChaikhanaMenuIfEmpty() {
+        Restaurant chaikhana = restaurantRepository.findBySlug("chaikhana").orElse(null);
+        if (chaikhana == null) {
             return;
         }
 
-        long existing = menuItemRepository.findByRestaurantId(bk.getId()).size();
+        long existing = menuItemRepository.findByRestaurantId(chaikhana.getId()).size();
         if (existing > 0) {
             return;
         }
 
-        Long rid = bk.getId();
+        Long rid = chaikhana.getId();
         List<MenuItem> menu = List.of(
                 bkMenuItem(rid, "Уйгур лагман 0,7", "Уйгурский лагман 0,7", "Лагман", "Лагман",
                         "Колго чоюлган кесме, уй эти, жашылчалар", "Домашняя лапша с говядиной", 280.0,
@@ -358,7 +386,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         );
 
         menuItemRepository.saveAll(menu);
-        log.info("Seeded {} menu items for Базар-Коргон (id={})", menu.size(), rid);
+        log.info("Seeded {} menu items for Чайхана (id={})", menu.size(), rid);
     }
 
     private MenuItem bkMenuItem(
@@ -725,9 +753,11 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         }
 
         List<Restaurant> defaults = List.of(
-                buildRestaurant("Базар-Коргон", "bazar-korgon", "🍽", "#c9a227", "БК", "Лагман, плов, самса"),
+                buildRestaurant("Чайхана", "chaikhana", "🍜", "#c9a227", "ЧХ", "Лагман, плов, самса"),
                 buildRestaurant("Family Park", "family", "F", "#5C1A1A", "FP", "Даамдуу тамактар — үй-бүлөңүз үчүн"),
-                buildRestaurant("Aga-Ini", "aga-ini", "AI", "#6B2737", "AI", "Улуттук тамактар — үйдөгү даам")
+                buildRestaurant("Aga-Ini", "aga-ini", "AI", "#6B2737", "AI", "Улуттук тамактар — үйдөгү даам"),
+                buildRestaurant("Burger Men", "burger-men", "🍔", "#E85D04", "BM", "Бургерлер жана комбо"),
+                buildRestaurant("Zhorolor Samsa", "zhorolor", "🥟", "#2D6A4F", "ZS", "Самса жана выпечка")
         );
 
         restaurantRepository.saveAll(defaults);
@@ -745,6 +775,7 @@ public class RestaurantDataInitializer implements CommandLineRunner {
         Restaurant restaurant = new Restaurant(name, slug, emoji, accentColor, orderPrefix);
         restaurant.setTagline(tagline);
         restaurant.setCustomerUrl("/" + slug);
+        restaurant.setAddress("Базар-Коргон шаары");
         restaurant.setActive(true);
         return restaurant;
     }
@@ -767,8 +798,8 @@ public class RestaurantDataInitializer implements CommandLineRunner {
     }
 
     private void backfillRestaurantIds() {
-        Restaurant defaultRestaurant = restaurantRepository.findBySlug("bazar-korgon")
-                .or(() -> restaurantRepository.findBySlug("ordo"))
+        Restaurant defaultRestaurant = restaurantRepository.findBySlug("chaikhana")
+                .or(() -> restaurantRepository.findBySlug("family"))
                 .orElse(restaurantRepository.findAll().stream().findFirst().orElse(null));
 
         if (defaultRestaurant == null) {

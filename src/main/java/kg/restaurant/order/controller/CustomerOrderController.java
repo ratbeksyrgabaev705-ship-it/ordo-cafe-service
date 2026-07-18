@@ -291,7 +291,7 @@ public class CustomerOrderController {
             @RequestParam(required = false) Long restaurantId
     ) {
         if (restaurantId != null) {
-            // Restaurant panels: only post-verification orders (Ratlion accept required)
+            // Restaurant panels: only post-verification orders (RATLION accept required)
             return repo.findByRestaurantIdAndOrderStatusNotInOrderByCreatedAtDesc(
                     restaurantId,
                     List.of("DELIVERED", "CANCELLED", "NEW")
@@ -461,7 +461,7 @@ public class CustomerOrderController {
         order.setCourierId(null);
         if (order.getRestaurantId() == null) {
             order.setRestaurantId(
-                    restaurantRepository.findBySlug("bazar-korgon")
+                    restaurantRepository.findBySlug("chaikhana")
                             .map(Restaurant::getId)
                             .orElse(1L)
             );
@@ -470,7 +470,7 @@ public class CustomerOrderController {
 
     private String restaurantLabel(CustomerOrder order) {
         if (order.getRestaurantId() == null) {
-            return "Базар-Коргон";
+            return "Чайхана";
         }
         return restaurantRepository.findById(order.getRestaurantId())
                 .map(Restaurant::getName)

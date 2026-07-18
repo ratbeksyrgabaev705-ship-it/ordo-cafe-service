@@ -25,8 +25,8 @@ public class RestaurantPageService {
         if ("femili".equals(normalized)) {
             return "family";
         }
-        if ("ordo".equals(normalized)) {
-            return "bazar-korgon";
+        if ("bazar-korgon".equals(normalized)) {
+            return "chaikhana";
         }
         return normalized;
     }
@@ -92,14 +92,14 @@ public class RestaurantPageService {
         if ("aga-ini".equals(s)) {
             return "aga-ini";
         }
-        return "bazar-korgon";
+        return "chaikhana";
     }
 
     public String resolveCustomerCss(String slug) {
         return switch (normalizeSlug(slug)) {
             case "family" -> "/family-customer.css";
             case "aga-ini" -> "/aga-ini-customer.css";
-            default -> "/bazar-korgon-customer.css";
+            default -> "/chaikhana-customer.css";
         };
     }
 

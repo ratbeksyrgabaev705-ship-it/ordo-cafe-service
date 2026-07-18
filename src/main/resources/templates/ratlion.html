@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${restaurantName != null ? restaurantName + ' — Чек текшерүү' : 'Ratlion — Төлөм текшерүү'}">Ratlion — Төлөм текшерүү</title>
+    <title th:text="${restaurantName != null ? restaurantName + ' — Чек текшерүү' : 'RATLION — Төлөм текшерүү'}">RATLION — Төлөм текшерүү</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -710,7 +710,7 @@
     <aside class="sidebar">
         <div class="logo">
             <span id="brandIcon" class="logo-icon">🔥</span>
-            <span id="brandName">Ratlion</span>
+            <span id="brandName">RATLION</span>
         </div>
         <nav class="nav">
             <button class="nav-item active" data-screen="new-orders" onclick="navigate('new-orders', this)">
@@ -875,11 +875,11 @@
         reportRestaurantId = k.id;
 
         document.getElementById('brandIcon').textContent = k.emoji || '🔥';
-        document.getElementById('brandName').textContent = k.name || 'Ratlion';
+        document.getElementById('brandName').textContent = k.name || 'RATLION';
         if (k.color) {
             document.documentElement.style.setProperty('--accent', k.color);
         }
-        document.title = (k.name || 'Ratlion') + ' — Чек текшерүү';
+        document.title = (k.name || 'RATLION') + ' — Чек текшерүү';
 
         const panelUrl = '/ratlion?slug=' + encodeURIComponent(k.slug || '');
         const kitchenUrl = '/cafe?slug=' + encodeURIComponent(k.slug || '');
@@ -941,8 +941,8 @@
         reportRestaurantId = null;
 
         document.getElementById('brandIcon').textContent = '🔥';
-        document.getElementById('brandName').textContent = 'Ratlion';
-        document.title = 'Ratlion — Борбордук админ';
+        document.getElementById('brandName').textContent = 'RATLION';
+        document.title = 'RATLION — Борбордук админ';
         document.getElementById('scopeLabel').textContent = 'Борбордук админ — чек текшерүү';
         document.getElementById('scopeBar').classList.add('show');
 
@@ -980,7 +980,7 @@
         allClear: 'Бардыгы орундала турган',
         noNew: 'Текшерүүгө күтүлгөн заказ жок',
         noVerified: 'Азырынча кабыл алынган заказ жок',
-        verifiedHint: 'Ratlion кабыл алган заказдар бул жерде көрүнөт',
+        verifiedHint: 'RATLION кабыл алган заказдар бул жерде көрүнөт',
         noReceipt: 'Чек жүктөлгөн эмес',
         comment: 'Комментарий',
         acceptOk: 'Заказ кабыл алынды (ACCEPTED)',

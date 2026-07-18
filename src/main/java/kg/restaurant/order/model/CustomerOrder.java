@@ -114,7 +114,7 @@ public class CustomerOrder {
     /** OFFER мөөнөтү — кийин кийинки курьерге */
     private LocalDateTime offerExpiresAt;
 
-    /** Ratlion операторu (accept/reject) */
+    /** RATLION оператору (accept/reject) */
     private String operatorName;
 
     public CustomerOrder() {

@@ -4,15 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <title th:text="${restaurantName + ' — Меню'}">Базар-Коргон</title>
+    <title th:text="${restaurantName}">Ресторан</title>
     <link rel="icon" href="/logo.png" type="image/png">
-    <link rel="stylesheet" th:href="${customerCss}" href="/bazar-korgon-customer.css">
+    <link rel="stylesheet" th:href="${customerCss}" href="/chaikhana-customer.css">
     <script th:inline="javascript">
         window.RESTAURANT = {
-            id: /*[[${restaurantId}]]*/ 1,
-            slug: /*[[${restaurantSlug}]]*/ 'bazar-korgon',
-            name: /*[[${restaurantName}]]*/ 'Базар-Коргон',
-            base: /*[[${restaurantBase}]]*/ '/bazar-korgon'
+            id: /*[[${restaurantId}]]*/ null,
+            slug: /*[[${restaurantSlug}]]*/ '',
+            name: /*[[${restaurantName}]]*/ '',
+            base: /*[[${restaurantBase}]]*/ '/',
+            address: /*[[${restaurantAddress}]]*/ ''
         };
     </script>
     <script src="/restaurant-context.js"></script>
@@ -47,11 +48,11 @@
         <div class="hero-row">
 
             <div class="hero-logo">
-                <img src="/logo.png" th:alt="${restaurantName}" alt="Базар-Коргон">
+                <img src="/logo.png" th:alt="${restaurantName}" alt="">
             </div>
 
             <div class="hero-info">
-                <h1 th:text="${restaurantName}">Базар-Коргон</h1>
+                <h1 th:text="${restaurantName}">Ресторан</h1>
                 <div class="hero-meta">
                     <p>
                         <svg class="meta-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -68,7 +69,7 @@
                 </div>
             </div>
 
-            <a th:href="${restaurantBase + '/cart'}" href="/bazar-korgon/cart" class="hero-cart">
+            <a th:href="${restaurantBase + '/cart'}" href="/cart" class="hero-cart">
                 <span class="hero-cart-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <path d="M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1 1 0 0020 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z"/>
@@ -139,7 +140,7 @@
     <a
             id="openCartText"
             th:href="${restaurantBase + '/cart'}"
-            href="/bazar-korgon/cart"
+            href="/cart"
             class="open-cart"
     >
         Себетке өтүү →
@@ -165,7 +166,6 @@
     const translations = {
         ky: {
             workingHours: 'Күн сайын 09:00 — 20:00',
-            location: 'Базар-Коргон шаары',
             cart: 'Себет',
             searchPlaceholder: 'Тамак издөө...',
             all: 'Баары',
@@ -187,7 +187,6 @@
 
         ru: {
             workingHours: 'Ежедневно 09:00 — 20:00',
-            location: 'Базар-Коргон шаары',
             cart: 'Корзина',
             searchPlaceholder: 'Поиск блюда...',
             all: 'Все',
@@ -256,7 +255,7 @@
             t('workingHours');
 
         document.getElementById('locationText').textContent =
-            t('location');
+            window.RESTAURANT?.address || '';
 
         document.getElementById('headerCartText').textContent =
             t('cart');

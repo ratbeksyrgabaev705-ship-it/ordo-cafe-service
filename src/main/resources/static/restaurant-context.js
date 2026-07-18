@@ -1,16 +1,18 @@
 (function () {
     const r = window.RESTAURANT || {};
-    const slug = r.slug || 'family';
+    const slug = r.slug || '';
     const id = r.id;
     if (!id) {
         console.error('RESTAURANT.id жок — меню туура жükтөлбөйт');
     }
 
-    window.restaurantBase = r.base || ('/r/' + slug);
+    window.restaurantBase = r.base || (slug ? '/' + slug : '/');
     window.restaurantSlug = slug;
     window.restaurantId = id;
 
-    localStorage.setItem('restaurantId', String(id));
+    if (id != null) {
+        localStorage.setItem('restaurantId', String(id));
+    }
 
     window.cartStorageKey = function () {
         return 'cart:' + slug;

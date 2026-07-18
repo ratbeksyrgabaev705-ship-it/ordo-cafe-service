@@ -74,7 +74,7 @@ public class TelegramWebhookController {
                 chatId,
                 "Салам" + (firstName.isBlank() ? "!" : ", " + firstName + "!")
                         + "\n\n"
-                        + "Базар-Коргон курьер боту.\n\n"
+                        + "RATLION курьер боту.\n\n"
                         + "Сиздин Telegram ID:\n"
                         + chatId + "\n\n"
                         + "Курьер каттоо:\n"

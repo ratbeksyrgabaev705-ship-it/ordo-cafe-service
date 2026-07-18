@@ -45,7 +45,7 @@ public class CourierController {
         return courierRepository.findByActiveFalseOrderByCreatedAtDesc();
     }
 
-    /** Ratlion: курьерлердин учурдагы кыймылы жана окуялар */
+    /** RATLION: курьерлердин учурдагы кыймылы жана окуялар */
     @GetMapping("/activity")
     public Map<String, Object> activity() {
         return courierActivityService.getDashboard();
@@ -212,7 +212,7 @@ public class CourierController {
     private void notifyCourierActivated(Courier courier) {
         telegramService.sendToCourier(
                 courier.getTelegramChatId(),
-                "✅ Сиз Базар-Коргон курьери катары катталдыңыз!\n\n"
+                "✅ Сиз RATLION курьери катары катталдыңыз!\n\n"
                         + "Жеткирүү заказдары бул жерге келет.\n"
                         + "Веб-панель: /courier"
         );

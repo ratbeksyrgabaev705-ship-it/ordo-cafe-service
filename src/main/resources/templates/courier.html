@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Курьер — Ratlion</title>
+    <title>Курьер — RATLION</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -171,7 +171,7 @@
     <div class="c-top-row">
         <div class="c-top-title">
             <h1>Курьер панели</h1>
-            <p id="headerSub">Ratlion</p>
+            <p id="headerSub">RATLION</p>
         </div>
         <button type="button" class="c-icon-btn c-hidden" id="bellBtn" onclick="toggleNotifications()" title="Билдирүүлөр">
             🔔<span class="c-notify-badge c-hidden" id="bellBadge">0</span>
@@ -477,7 +477,7 @@
         document.getElementById('refreshFab').classList.add('c-hidden');
         document.getElementById('avatarBtn').classList.add('c-hidden');
         document.getElementById('bellBtn').classList.add('c-hidden');
-        document.getElementById('headerSub').textContent = 'Ratlion';
+        document.getElementById('headerSub').textContent = 'RATLION';
     }
 
     const SESSION_KEY = 'courierSessionV1';
@@ -551,7 +551,7 @@
         document.getElementById('avatarBtn').textContent = avatarName.charAt(0).toUpperCase();
         document.getElementById('profileName').textContent = courier.name || 'Курьер';
         document.getElementById('profilePhone').textContent = '📞 ' + (courier.phone || '—');
-        document.getElementById('headerSub').textContent = courier.name || 'Ratlion';
+        document.getElementById('headerSub').textContent = courier.name || 'RATLION';
         showInAppHint();
         refreshAll();
     }
